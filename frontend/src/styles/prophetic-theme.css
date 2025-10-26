@@ -1,0 +1,117 @@
+/**
+ * Prophetic Color Theme for Al-Muwatta
+ * 
+ * Based on Islamic tradition:
+ * - White: Prophet's preferred clothing color (purity, simplicity)
+ * - Green: Associated with Paradise and Islamic tradition
+ * - Natural earth tones: Reflecting humility and nature
+ * 
+ * Design Philosophy: Expert-level minimalism with spiritual depth
+ */
+
+:root {
+  /* Primary - Prophetic White & Cream (Purity, Simplicity) */
+  --prophetic-white: #FDFCFA;
+  --prophetic-cream: #F5F3F0;
+  --prophetic-ivory: #EBE8E3;
+  
+  /* Secondary - Paradise Green (Jannah) */
+  --paradise-green: #0D7C66;
+  --paradise-light: #41B8A6;
+  --paradise-dark: #0A5C4F;
+  --paradise-subtle: #E8F5F2;
+  
+  /* Accent - Natural Earth Tones (Humility) */
+  --earth-brown: #6B5B4C;
+  --earth-sand: #C9B8A3;
+  --earth-clay: #A08974;
+  
+  /* Neutrals - Sophisticated Grays */
+  --neutral-100: #FAFAFA;
+  --neutral-200: #F4F4F5;
+  --neutral-300: #E4E4E7;
+  --neutral-400: #A1A1AA;
+  --neutral-500: #71717A;
+  --neutral-600: #52525B;
+  --neutral-700: #3F3F46;
+  --neutral-800: #27272A;
+  --neutral-900: #18181B;
+  
+  /* Semantic Colors */
+  --quran-text: #1E40AF;        /* Indigo - for Quranic verses */
+  --hadith-text: #92400E;        /* Amber-dark - for Hadith */
+  --fiqh-text: #0D7C66;         /* Paradise green - for fiqh */
+  
+  /* Status Colors (Muted, Professional) */
+  --success: #15803D;
+  --warning: #CA8A04;
+  --error: #B91C1C;
+  --info: #0369A1;
+  
+  /* Glass Morphism (Modern, Ethereal) */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(13, 124, 102, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  
+  /* Dark Mode (Deep, Professional) */
+  --dark-bg: #18181B;
+  --dark-surface: #27272A;
+  --dark-border: #3F3F46;
+  --dark-text: #FAFAFA;
+  --dark-muted: #A1A1AA;
+}
+
+/* Expert-level shadows (subtle depth) */
+.shadow-prophetic-sm {
+  box-shadow: 0 2px 8px rgba(13, 124, 102, 0.08);
+}
+
+.shadow-prophetic {
+  box-shadow: 0 4px 16px rgba(13, 124, 102, 0.12);
+}
+
+.shadow-prophetic-lg {
+  box-shadow: 0 8px 32px rgba(13, 124, 102, 0.16);
+}
+
+/* Gradients (Sophisticated, not flashy) */
+.gradient-paradise {
+  background: linear-gradient(135deg, var(--paradise-green) 0%, var(--paradise-light) 100%);
+}
+
+.gradient-prophetic {
+  background: linear-gradient(135deg, var(--prophetic-cream) 0%, var(--prophetic-white) 100%);
+}
+
+.gradient-earth {
+  background: linear-gradient(135deg, var(--earth-clay) 0%, var(--earth-sand) 100%);
+}
+
+/* Text gradients (subtle elegance) */
+.text-gradient-paradise {
+  background: linear-gradient(135deg, var(--paradise-dark) 0%, var(--paradise-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism (modern, clean) */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Islamic pattern overlay (very subtle) */
+.pattern-islamic {
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 35px,
+      rgba(13, 124, 102, 0.02) 35px,
+      rgba(13, 124, 102, 0.02) 70px
+    );
+}
+

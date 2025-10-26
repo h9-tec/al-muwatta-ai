@@ -138,13 +138,13 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-slate-50 via-teal-50 to-emerald-50'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-neutral-900' : ''}`}>
       {/* Header */}
       <header className={`sticky top-0 z-50 shadow-lg ${isDark ? 'bg-gray-800/90 backdrop-blur-lg' : 'glass-morphism'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full gradient-islamic flex items-center justify-center text-white shadow-lg">
+              <div className="w-12 h-12 rounded-full bg-gradient-paradise flex items-center justify-center text-white shadow-prophetic">
                 <Sparkles size={24} />
               </div>
               <div>

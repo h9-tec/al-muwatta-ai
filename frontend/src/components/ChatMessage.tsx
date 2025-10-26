@@ -32,10 +32,10 @@ export function ChatMessage({ id, role, content, timestamp, question }: ChatMess
     >
       <div
         className={cn(
-          'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center',
+          'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm',
           isUser
-            ? 'bg-gradient-to-br from-islamic-green to-islamic-teal text-white'
-            : 'bg-gray-700 border-2 border-islamic-gold text-islamic-gold'
+            ? 'bg-gradient-paradise text-white'
+            : 'bg-prophetic-cream border border-paradise-500/20 text-paradise-600'
         )}
       >
         {isUser ? <User size={20} /> : <Bot size={20} />}
@@ -44,10 +44,10 @@ export function ChatMessage({ id, role, content, timestamp, question }: ChatMess
       <div className={cn('flex flex-col', isUser ? 'items-end' : 'items-start', 'max-w-[90%]')}>
         <div
           className={cn(
-            'rounded-2xl px-6 py-4 shadow-sm',
+            'rounded-2xl px-6 py-4',
             isUser
-              ? 'bg-gradient-to-br from-islamic-green to-islamic-teal text-white rounded-tr-none'
-              : 'glass-morphism text-gray-800 rounded-tl-none'
+              ? 'bg-gradient-paradise text-white shadow-prophetic rounded-tr-none'
+              : 'glass-morphism text-neutral-800 shadow-prophetic-sm rounded-tl-none border border-paradise-500/10'
           )}
         >
           {isUser ? (
