@@ -4,69 +4,66 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --base-font-size: 16px;
-  --arabic-font-size: 17.6px;
+/* Base styles */
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #FDFCFA 0%, #F5F3F0 100%);
+  font-size: 16px;
+  direction: ltr;
 }
 
-@layer base {
-  body {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #FDFCFA 0%, #F5F3F0 100%);
-    font-size: 16px;
-    direction: ltr;
-  }
-
-  .arabic-text {
-    font-family: 'Amiri', serif;
-    text-align: right;
-    font-size: 17.6px;
-    direction: rtl;
-    letter-spacing: 0;
-  }
+.arabic-text {
+  font-family: 'Amiri', serif;
+  text-align: right;
+  font-size: 17.6px;
+  direction: rtl;
+  letter-spacing: 0;
 }
 
-@layer components {
-  .glass-morphism {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(13, 124, 102, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  }
-  
-  .gradient-islamic {
-    background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
-  }
-  
-  .bg-gradient-paradise {
-    background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
-  }
-  
-  .islamic-pattern {
-    background-color: #FDFCFA;
-    background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(13, 124, 102, 0.015) 40px, rgba(13, 124, 102, 0.015) 80px);
-  }
-  
-  .text-gradient {
-    background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .shadow-prophetic {
-    box-shadow: 0 4px 16px rgba(13, 124, 102, 0.12);
-  }
-  
-  .shadow-prophetic-sm {
-    box-shadow: 0 2px 8px rgba(13, 124, 102, 0.08);
-  }
-  
-  .shadow-prophetic-lg {
-    box-shadow: 0 8px 32px rgba(13, 124, 102, 0.16);
-  }
+/* Glass morphism */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(13, 124, 102, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
+/* Gradients */
+.gradient-islamic {
+  background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
+}
+
+.bg-gradient-paradise {
+  background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Islamic pattern */
+.islamic-pattern {
+  background-color: #FDFCFA;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(13, 124, 102, 0.015) 40px, rgba(13, 124, 102, 0.015) 80px);
+}
+
+/* Shadows */
+.shadow-prophetic-sm {
+  box-shadow: 0 2px 8px rgba(13, 124, 102, 0.08);
+}
+
+.shadow-prophetic {
+  box-shadow: 0 4px 16px rgba(13, 124, 102, 0.12);
+}
+
+.shadow-prophetic-lg {
+  box-shadow: 0 8px 32px rgba(13, 124, 102, 0.16);
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -85,6 +82,7 @@
   background-color: rgba(13, 124, 102, 0.5);
 }
 
+/* Animations */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -102,6 +100,7 @@
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -113,6 +112,7 @@
   animation: fadeIn 0.5s ease-out;
 }
 
+/* Markdown content */
 .markdown-content {
   color: #1f2937;
   line-height: 1.75;
@@ -229,6 +229,7 @@
   font-weight: 700;
 }
 
+/* Arabic RTL Support */
 .arabic-markdown {
   direction: rtl;
   text-align: right;
