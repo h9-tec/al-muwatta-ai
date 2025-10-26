@@ -11,6 +11,7 @@ from loguru import logger
 
 from ..config import settings
 from .rag_service import MalikiFiqhRAG
+from ..utils.question_classifier import is_fiqh_question, get_response_instructions
 
 
 class GeminiService:
@@ -201,45 +202,61 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
         else:
             lang_instruction = "in clear, natural English"
 
-        # Get relevant context from RAG if available
+        # Detect if this is a fiqh question
+        is_fiqh, question_category = is_fiqh_question(question)
+        
+        # Get relevant context from RAG ONLY if it's a fiqh question
         rag_context = ""
-        if self.rag:
+        if is_fiqh and self.rag:
             try:
                 rag_context = self.rag.get_relevant_context(question, max_context_length=1500)
                 if rag_context:
-                    logger.info("✅ RAG context retrieved for question")
+                    logger.info(f"✅ RAG context retrieved for {question_category} question")
             except Exception as e:
                 logger.warning(f"RAG search failed: {e}")
+        
+        # Get appropriate instructions based on question type
+        scholar_role = get_response_instructions(is_fiqh, question_category, language)
 
-        # Build enhanced prompt with RAG context
-        context_section = ""
-        if rag_context:
-            context_section = f"""
-**IMPORTANT: Use the following authentic Maliki fiqh sources to inform your answer:**
+        # Build prompt differently for fiqh vs non-fiqh questions
+        if is_fiqh and rag_context:
+            # For FIQH questions: Use RAG and Maliki specialization
+            prompt = f"""
+{scholar_role}
+
+**Relevant Maliki fiqh sources for this question:**
 
 {rag_context}
 
-Base your answer on these sources when applicable, especially for fiqh questions.
+{question}
+
+Provide answer {lang_instruction}:
+1. Direct answer based on Maliki madhab
+2. Evidence from Quran and Hadith
+3. Citation from Maliki sources (Al-Risala, Mukhtasar Khalil, etc.)
+4. Practical guidance if relevant
+
+Be accurate, respectful, cite sources, and respond in the same language/dialect style as the question.
+Use proper formatting with headings and bullet points.
 """
-
-        prompt = f"""
-As a knowledgeable Islamic scholar specialized in Maliki fiqh, answer the following question {lang_instruction}.
-
-{context_section}
+        else:
+            # For NON-FIQH questions: General Islamic scholar (no madhab emphasis)
+            prompt = f"""
+{scholar_role}
 
 {question}
 
-Provide:
-1. Direct answer based on Quran, authentic Hadith, and Maliki fiqh sources
+Provide answer {lang_instruction}:
+1. Direct answer based on Quran and authentic Hadith
 2. Supporting evidence from Islamic sources
-3. Maliki madhab position (when relevant to fiqh questions)
-4. Different scholarly opinions if applicable
-5. Practical guidance if relevant
+3. Clear explanation and practical guidance if relevant
 
-Be accurate, respectful, cite sources, and MOST IMPORTANTLY: respond in the same language/dialect style as the question.
-Use proper formatting with headings, bullet points, and clear structure.
-When citing Maliki sources, mention them explicitly.
+Be accurate, respectful, and respond in the same language/dialect style as the question.
+Use proper formatting with headings and bullet points.
+Do NOT mention specific madhabs or fiqh schools unless the question specifically asks about them.
 """
+            
+            logger.info(f"ℹ️ Non-fiqh {question_category} question - using general Islamic knowledge")
 
         return await self.generate_content(prompt, temperature=0.6, max_tokens=2500)
 
