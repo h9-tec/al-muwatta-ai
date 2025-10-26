@@ -13,7 +13,7 @@ interface PrayerTimes {
 
 export function PrayerTimesWidget() {
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
-  const [location, setLocation] = useState<string>('');
+  const [location, setLocation] = useState<string>('Loading...');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +27,15 @@ export function PrayerTimesWidget() {
               position.coords.longitude
             );
             setPrayerTimes(response.timings.timings);
-            setLocation('Your Location');
+            
+            // Try to get city name from response
+            const meta = response.timings?.meta;
+            if (meta) {
+              const city = meta.timezone || 'Your Location';
+              setLocation(city.split('/').pop() || 'Your Location');
+            } else {
+              setLocation('Your Location');
+            }
           } catch (error) {
             console.error('Failed to fetch prayer times:', error);
             // Fallback to Makkah
