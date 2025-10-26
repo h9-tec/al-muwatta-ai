@@ -100,9 +100,9 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? 'dark' : ''}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-slate-50 via-teal-50 to-emerald-50'}`}>
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-morphism shadow-lg">
+      <header className={`sticky top-0 z-50 shadow-lg ${isDark ? 'bg-gray-800/90 backdrop-blur-lg' : 'glass-morphism'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -110,14 +110,14 @@ function App() {
                 <Sparkles size={24} />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gradient">Al-Muwatta</h1>
-                <p className="text-sm text-gray-600 arabic-text font-bold">الموطأ</p>
+                <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gradient'}`}>Al-Muwatta</h1>
+                <p className={`text-sm arabic-text font-bold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>الموطأ</p>
               </div>
             </div>
             
             <button
               onClick={() => setIsDark(!isDark)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-gray-700 text-yellow-400' : 'hover:bg-gray-100 text-gray-700'}`}
               aria-label="Toggle theme"
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -132,17 +132,17 @@ function App() {
           {/* Chat Area - Full Width */}
           <div className="flex-1 space-y-4">
             {/* Messages */}
-            <div className="glass-morphism rounded-2xl shadow-xl overflow-hidden">
-              <div className="h-[calc(100vh-200px)] overflow-y-auto p-6 space-y-4 islamic-pattern">
+            <div className={`rounded-2xl shadow-xl overflow-hidden ${isDark ? 'bg-gray-800/90 backdrop-blur-lg border border-gray-700' : 'glass-morphism'}`}>
+              <div className={`h-[calc(100vh-200px)] overflow-y-auto p-6 space-y-4 ${isDark ? 'bg-gray-900' : 'islamic-pattern'}`}>
                 {messages.length === 1 && (
                   <div className="text-center py-8">
-                    <div className="inline-block p-6 rounded-2xl bg-gradient-to-br from-islamic-green/10 to-islamic-teal/10 mb-4">
-                      <Sparkles size={48} className="text-islamic-green mx-auto" />
+                    <div className={`inline-block p-6 rounded-2xl mb-4 ${isDark ? 'bg-islamic-green/20' : 'bg-gradient-to-br from-islamic-green/10 to-islamic-teal/10'}`}>
+                      <Sparkles size={48} className={`mx-auto ${isDark ? 'text-islamic-gold' : 'text-islamic-green'}`} />
                     </div>
-                    <h2 className="text-2xl font-bold text-gradient mb-2">
+                    <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gradient'}`}>
                       Ask me anything about Islam
                     </h2>
-                    <p className="text-gray-600">
+                    <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>
                       Get authentic answers from Quran, Hadith, and Islamic scholarship
                     </p>
                   </div>
@@ -183,7 +183,7 @@ function App() {
               )}
 
               {/* Input Area */}
-              <div className="border-t border-gray-200 bg-white/80 p-4">
+              <div className={`border-t p-4 ${isDark ? 'border-gray-700 bg-gray-800/90' : 'border-gray-200 bg-white/80'}`}>
                 <div className="flex gap-3">
                   <UploadButton
                     onUploadComplete={(message) => {
@@ -203,7 +203,11 @@ function App() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Ask about Quran, Hadith, or Islamic guidance..."
-                    className="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:border-islamic-green focus:ring-2 focus:ring-islamic-green/20 outline-none transition-all"
+                    className={`flex-1 px-4 py-3 rounded-xl border outline-none transition-all ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-islamic-gold focus:ring-2 focus:ring-islamic-gold/20' 
+                        : 'bg-white border-gray-300 text-gray-900 focus:border-islamic-green focus:ring-2 focus:ring-islamic-green/20'
+                    }`}
                     disabled={loading}
                   />
                   <button
@@ -221,7 +225,7 @@ function App() {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">
+                <p className={`text-xs mt-2 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   Powered by Google Gemini AI • Press Enter to send
                 </p>
               </div>

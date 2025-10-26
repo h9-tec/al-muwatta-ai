@@ -32,7 +32,7 @@ export function ChatMessage({ role, content, timestamp }: ChatMessageProps) {
           'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center',
           isUser
             ? 'bg-gradient-to-br from-islamic-green to-islamic-teal text-white'
-            : 'bg-white border-2 border-islamic-gold text-islamic-green'
+            : 'bg-gray-700 border-2 border-islamic-gold text-islamic-gold'
         )}
       >
         {isUser ? <User size={20} /> : <Bot size={20} />}
