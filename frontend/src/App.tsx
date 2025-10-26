@@ -41,11 +41,17 @@ const parseStoredMessages = (raw: StoredMessage[] | null, fallback: Message[]): 
         return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
       })();
 
+      const normalizedMetadata =
+        item.metadata && typeof item.metadata === 'object'
+          ? (item.metadata as Record<string, unknown>)
+          : undefined;
+
       return {
         id: item.id ?? crypto.randomUUID(),
         role: item.role === 'user' ? 'user' : 'assistant',
         content: item.content ?? '',
         timestamp: parsedTimestamp,
+        metadata: normalizedMetadata,
       } satisfies Message;
     })
     .filter((message) => Boolean(message.content.trim()));
@@ -106,6 +112,7 @@ function App() {
       role: message.role,
       content: message.content,
       timestamp: message.timestamp.toISOString(),
+      metadata: message.metadata ?? undefined,
     } satisfies StoredMessage));
 
     window.localStorage.setItem('chat_messages', JSON.stringify(serializable));
@@ -271,6 +278,7 @@ function App() {
                     content={message.content}
                     timestamp={message.timestamp}
                     question={index > 0 ? messages[index - 1]?.content : undefined}
+                    metadata={message.metadata}
                   />
                 ))}
 

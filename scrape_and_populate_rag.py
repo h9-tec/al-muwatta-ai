@@ -12,24 +12,28 @@ This script:
 import asyncio
 import json
 from pathlib import Path
+from typing import List, Dict, Any, Iterable
+
 from loguru import logger
-from typing import List, Dict, Any
 
 from src.services.rag_service import MalikiFiqhRAG
 from src.services.fiqh_scraper import MalikiFiqhScraper
 
+DATA_DIR = Path("data")
+SCRAPED_FULL_PATH = DATA_DIR / "scraped_maliki_all.json"
+MALIKI_FIQHQA_FULL = DATA_DIR / "maliki_fiqhqa_full.jsonl"
+ARQAN_BLOG_PATH = DATA_DIR / "maliki_arqan_blog.jsonl"
+
 
 async def load_manual_maliki_content() -> List[Dict[str, Any]]:
     """Load comprehensive manually curated Maliki content."""
-    
+
     content = [
-        # Original 5 documents
         {
             "topic": "The Five Pillars in Maliki Fiqh",
             "text": """[Content from original]""",
             "category": "ibadah",
         },
-        # Add 20+ more comprehensive topics
         {
             "topic": "Maliki Position on Tayammum (Dry Ablution)",
             "category": "taharah",
@@ -98,6 +102,33 @@ async def load_manual_maliki_content() -> List[Dict[str, Any]]:
 - Performs wudu for each prayer
 
 **Source**: Al-Risala, Maliki Fiqh Manuals
+            """,
+        },
+        {
+            "topic": "Hand Placement in Maliki Prayer (Sadl vs Qabd)",
+            "category": "salah",
+            "text": """
+# Hand Placement (Sadl vs Qabd) in Maliki Fiqh
+
+## Core Ruling
+- **Sadl** (letting the hands hang at the sides) is the relied-upon practice in the Maliki school during obligatory prayers.
+- **Qabd** (folding the hands) is *permissible* but not preferred in the Maliki madhab.
+
+## Evidence and Rationale
+1. Imam Malik narrated that the Prophet ﷺ sometimes prayed with his hands by the sides, emphasising tranquility in the posture.
+2. Reports from the people of Madinah highlight sadl as a continuous practice; Malikis prioritise their transmitted actions.
+3. Folding the hands is accepted if a person follows another madhab or finds it helps them focus.
+
+## When Qabd Is Allowed
+- In **nafl (supererogatory)** prayers.
+- When following an imam of another madhab to avoid disagreement.
+- When a worshipper finds greater concentration or has a medical need.
+
+## Practical Advice
+- Maintain khushu' and serenity whichever posture is chosen.
+- Avoid labelling the alternative invalid; both are recognised in classical texts such as *al-Mudawwana* and commentaries on *al-Risala*.
+
+**Source**: Al-Mudawwana, Sharh Khalil, commentaries on Al-Risala
             """,
         },
         {
@@ -319,38 +350,72 @@ Permitted with conditions:
             """,
         },
     ]
-    
-    # Get original 5 + these 5 new ones
+
     scraper = MalikiFiqhScraper()
     original_content = scraper.get_predefined_maliki_texts()
-    
+
     return original_content + content
 
 
+def _load_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
+    if not path.exists():
+        return []
+    with path.open("r", encoding="utf-8") as stream:
+        for line in stream:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                yield json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+
+def _normalize_external_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
+    text = doc.get("text") or doc.get("markdown") or ""
+    metadata = {
+        "topic": doc.get("title", "Maliki Fiqh Resource"),
+        "madhab": "Maliki",
+        "category": doc.get("category") or doc.get("tags", ["general"])[0] if doc.get("tags") else "general",
+        "source": doc.get("source", "External Maliki Source"),
+        "references": doc.get("references", doc.get("url", "")),
+        "language": doc.get("language", "English"),
+        "url": doc.get("url"),
+        "tags": doc.get("tags", []),
+    }
+    return {"text": text, "metadata": metadata}
+
+
+async def ingest_documents(rag: MalikiFiqhRAG, documents: Iterable[Dict[str, Any]]) -> int:
+    added = 0
+    for doc in documents:
+        normalized = _normalize_external_doc(doc)
+        if not normalized["text"]:
+            continue
+        success = rag.add_document(text=normalized["text"], metadata=normalized["metadata"])
+        if success:
+            added += 1
+            logger.info(f"✅ Added external doc: {normalized['metadata']['topic']}")
+    return added
+
+
 async def main():
-    """Main scraping and population function."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🕷️  COMPREHENSIVE MALIKI FIQH SCRAPING & RAG POPULATION")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
-    # Create data directory
-    data_dir = Path("data")
-    data_dir.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(exist_ok=True)
 
-    # Step 1: Load manual content
     print("📚 Step 1: Loading curated Maliki fiqh content...")
     manual_content = await load_manual_maliki_content()
     print(f"✅ Loaded {len(manual_content)} curated documents\n")
 
-    # Step 2: Initialize RAG
     print("🔧 Step 2: Initializing Qdrant RAG system...")
     rag = MalikiFiqhRAG()
     print("✅ RAG system ready\n")
 
-    # Step 3: Add all content to RAG
-    print("📖 Step 3: Adding all content to vector database...")
-    added_count = 0
-
+    print("📖 Step 3: Adding manual curated content...")
+    manual_added = 0
     for doc in manual_content:
         try:
             success = rag.add_document(
@@ -364,20 +429,45 @@ async def main():
                 },
             )
             if success:
-                added_count += 1
-                logger.info(f"✅ Added: {doc['topic']}")
-        except Exception as e:
-            logger.error(f"Failed to add {doc['topic']}: {e}")
+                manual_added += 1
+                logger.info(f"✅ Added manual doc: {doc['topic']}")
+        except Exception as exc:
+            logger.error(f"Failed to add {doc['topic']}: {exc}")
+    print(f"\n✅ Added {manual_added} manual documents\n")
 
-    print(f"\n✅ Added {added_count} documents to RAG\n")
+    print("📥 Step 4: Loading scraped datasets (if available)...")
+    external_docs = []
 
-    # Step 4: Get final statistics
-    print("📊 Step 4: Getting knowledge base statistics...")
+    if SCRAPED_FULL_PATH.exists():
+        with SCRAPED_FULL_PATH.open("r", encoding="utf-8") as stream:
+            try:
+                external_docs.extend(json.load(stream))
+                print(f"   • Loaded {len(external_docs)} items from {SCRAPED_FULL_PATH.name}")
+            except json.JSONDecodeError:
+                print(f"   • Failed to parse {SCRAPED_FULL_PATH.name}")
+
+    arqan_docs = list(_load_jsonl(ARQAN_BLOG_PATH))
+    if arqan_docs:
+        external_docs.extend(arqan_docs)
+        print(f"   • Loaded {len(arqan_docs)} items from {ARQAN_BLOG_PATH.name}")
+
+    fiqhqa_full_docs = list(_load_jsonl(MALIKI_FIQHQA_FULL))
+    if fiqhqa_full_docs:
+        external_docs.extend(fiqhqa_full_docs)
+        print(f"   • Loaded {len(fiqhqa_full_docs)} items from {MALIKI_FIQHQA_FULL.name}")
+
+    if external_docs:
+        print("📦 Step 5: Ingesting external scraped content...")
+        external_added = await ingest_documents(rag, external_docs)
+        print(f"   ✅ Added {external_added} external documents")
+    else:
+        print("   • No external scraped data found.")
+
+    print("\n📊 Step 6: Knowledge base statistics...")
     stats = rag.get_statistics()
-    
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("✨ MALIKI FIQH KNOWLEDGE BASE READY!")
-    print("="*70)
+    print("=" * 70)
     print(f"\n📊 Statistics:")
     print(f"   • Total Documents: {stats['total_documents']}")
     print(f"   • Collection: {stats['collection_name']}")
@@ -386,23 +476,21 @@ async def main():
     print(f"   • Dimensions: {stats['embedding_dimension']}")
     print(f"   • Status: {stats['status'].upper()}")
 
-    # Step 5: Test search
-    print(f"\n🔍 Testing semantic search...")
-    test_queries = [
+    print("\n🔍 Step 7: Sample semantic search...")
+    for query in [
         "How do I perform prayer in Maliki madhab?",
         "ما حكم الجمع بين الصلاتين؟",
         "What breaks wudu in Maliki fiqh?",
-    ]
-
-    for query in test_queries:
+        "Learn Maliki fiqh foundations",
+    ]:
         results = rag.search(query, n_results=1)
         if results:
             print(f"   ✅ '{query[:40]}...' → {results[0]['metadata']['topic']}")
 
-    print(f"\n{'='*70}")
-    print("🚀 RESTART BACKEND to use the enhanced knowledge base!")
-    print("   Command: pkill -f 'python run.py' && python run.py &")
-    print("="*70 + "\n")
+    print(f"\n{'=' * 70}")
+    print("🚀 RESTART backend to use the enhanced knowledge base!")
+    print("   Suggested: pkill -f 'uvicorn' && uvicorn src.main:app --reload")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

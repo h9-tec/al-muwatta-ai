@@ -1,4 +1,5 @@
-import { Bot, User } from 'lucide-react';
+import { useState } from 'react';
+import { Bot, User, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../lib/utils';
@@ -41,6 +42,51 @@ const renderSources = (metadata?: Record<string, unknown>) => {
 export function ChatMessage({ id, role, content, timestamp, question, metadata }: ChatMessageProps) {
   const isUser = role === 'user';
   const isArabic = isArabicText(content);
+  const [showRagChunks, setShowRagChunks] = useState(false);
+
+  const ragChunks = Array.isArray(metadata?.rag_chunks)
+    ? (metadata?.rag_chunks as Array<Record<string, unknown>>)
+    : [];
+
+  const renderRagChunks = () => {
+    if (!ragChunks.length) return null;
+
+    return (
+      <div className="mt-3 border-t border-gray-200 pt-3 text-xs">
+        <button
+          type="button"
+          onClick={() => setShowRagChunks((prev) => !prev)}
+          className="w-full flex items-center justify-between rounded-lg bg-white/60 px-3 py-2 text-left font-semibold text-gray-700 hover:bg-white/80"
+        >
+          <span>Retrieved Maliki context ({ragChunks.length})</span>
+          {showRagChunks ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+
+        {showRagChunks && (
+          <div className="mt-3 space-y-3">
+            {ragChunks.map((chunk, index) => {
+              const metadata = (chunk.metadata as Record<string, unknown>) || {};
+              const score = typeof chunk.score === 'number' ? chunk.score.toFixed(2) : undefined;
+              return (
+                <div
+                  key={(chunk.id as string) ?? index}
+                  className="rounded-lg bg-white/70 p-3 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] uppercase tracking-wide text-gray-500">
+                    <span>{(metadata.topic as string) || 'Maliki fiqh reference'}</span>
+                    <span>{score ? `Score: ${score}` : null}</span>
+                  </div>
+                  <pre className="mt-2 whitespace-pre-wrap break-words text-gray-700">
+                    {(chunk.text as string) ?? ''}
+                  </pre>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -85,6 +131,7 @@ export function ChatMessage({ id, role, content, timestamp, question, metadata }
                 {content}
               </ReactMarkdown>
               {renderSources(metadata)}
+              {renderRagChunks()}
             </div>
           )}
         </div>

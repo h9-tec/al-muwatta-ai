@@ -7,6 +7,31 @@ Only uses Maliki RAG for fiqh-related questions.
 from typing import Tuple
 
 
+def _contains_arabic(text: str) -> bool:
+    return any("\u0600" <= ch <= "\u06FF" for ch in text)
+
+
+DIALECT_KEYWORDS = {
+    "egyptian": ["يا", "إزيك", "عايز", "مش", "ليه", "هعمل"],
+    "levant": ["شو", "ليش", "كتير", "بدك", "عشان", "هلأ"],
+    "maghrebi": ["واش", "بزاف", "ماشي", "شنو", "علاش", "باش"],
+    "gulf": ["شلونك", "زود", "واجد", "بلا", "هالحين", "بس"],
+}
+
+
+def detect_arabic_dialect(text: str) -> str:
+    normalized = text.strip().lower()
+    for dialect, keywords in DIALECT_KEYWORDS.items():
+        if any(keyword in normalized for keyword in keywords):
+            return dialect
+    return "msa"
+
+
+def is_arabic_text(text: str) -> bool:
+    """Return True when the string contains Arabic script characters."""
+    return _contains_arabic(text)
+
+
 def wants_sources(question: str) -> bool:
     """
     Check if user explicitly wants to see sources/citations.

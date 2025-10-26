@@ -217,6 +217,17 @@ class MalikiFiqhRAG:
             Concatenated relevant context with citations
         """
         results = self.search(query, n_results=3, score_threshold=0.3)
+        logger.debug(
+            "RAG search results: {}",
+            [
+                {
+                    "id": result.get("id"),
+                    "score": result.get("score"),
+                    "topic": result.get("metadata", {}).get("topic"),
+                }
+                for result in results
+            ],
+        )
 
         if not results:
             return ""

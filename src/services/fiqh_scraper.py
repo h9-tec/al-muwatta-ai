@@ -5,11 +5,40 @@ This module scrapes authentic Maliki fiqh resources from trusted sources.
 """
 
 from typing import List, Dict, Any, Optional
+import asyncio
+import json
+from pathlib import Path
 import httpx
 from bs4 import BeautifulSoup
 import html2text
 from loguru import logger
-import asyncio
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+
+try:
+    from scrapers.comprehensive_maliki_scraper import (
+        SayfAlHaqqMalikiSpider,
+        IIUMLawbaseMalikiSpider,
+    )
+except ModuleNotFoundError:  # pragma: no cover
+    import sys
+    from pathlib import Path
+
+    ROOT = Path(__file__).resolve().parents[2]
+    if str(ROOT) not in sys.path:
+        sys.path.append(str(ROOT))
+    from scrapers.comprehensive_maliki_scraper import (  # type: ignore
+        SayfAlHaqqMalikiSpider,
+        IIUMLawbaseMalikiSpider,
+    )
+
+
+DATA_DIR = Path("data")
+SAYF_JSONL = DATA_DIR / "sayf_al_haqq.jsonl"
+IIUM_JSONL = DATA_DIR / "iium_maliki_lawbase.jsonl"
+PDF_DIR = DATA_DIR / "pdf"
+
+PDF_DIR.mkdir(exist_ok=True)
 
 
 class MalikiFiqhScraper:
@@ -137,6 +166,72 @@ class MalikiFiqhScraper:
         except Exception as e:
             logger.error(f"Error scraping {url}: {e}")
             return None
+
+    async def run_sayf_al_haqq_scraper(self) -> List[Dict[str, Any]]:
+        """Run Scrapy spider to collect Sayf al Haqq Maliki resources."""
+        loop = asyncio.get_running_loop()
+
+        def _crawl() -> List[Dict[str, Any]]:
+            items: List[Dict[str, Any]] = []
+
+            class _CollectorPipeline:
+                def process_item(self, item, spider):  # type: ignore[no-untyped-def]
+                    items.append(dict(item))
+                    return item
+
+            settings = {
+                "LOG_ENABLED": False,
+                "USER_AGENT": "Mozilla/5.0 (compatible; MalikiFiqhBot/1.0)",
+                "ITEM_PIPELINES": {__name__ + "._CollectorPipeline": 1},
+                "FEEDS": {
+                    str(SAYF_JSONL): {
+                        "format": "jsonlines",
+                        "overwrite": True,
+                        "encoding": "utf8",
+                    }
+                },
+            }
+
+            process = CrawlerProcess(settings)
+
+            process.crawl(SayfAlHaqqMalikiSpider)
+            process.start()
+            return items
+
+        return await loop.run_in_executor(None, _crawl)
+
+    async def run_iium_lawbase_scraper(self) -> List[Dict[str, Any]]:
+        """Run Scrapy spider to harvest IIUM Lawbase Maliki fiqh content."""
+        loop = asyncio.get_running_loop()
+
+        def _crawl() -> List[Dict[str, Any]]:
+            items: List[Dict[str, Any]] = []
+
+            class _CollectorPipeline:
+                def process_item(self, item, spider):  # type: ignore[no-untyped-def]
+                    items.append(dict(item))
+                    return item
+
+            settings = {
+                "LOG_ENABLED": False,
+                "USER_AGENT": "Mozilla/5.0 (compatible; MalikiFiqhBot/1.0)",
+                "ITEM_PIPELINES": {__name__ + "._CollectorPipeline": 1},
+                "FEEDS": {
+                    str(IIUM_JSONL): {
+                        "format": "jsonlines",
+                        "overwrite": True,
+                        "encoding": "utf8",
+                    }
+                },
+            }
+
+            process = CrawlerProcess(settings)
+
+            process.crawl(IIUMLawbaseMalikiSpider)
+            process.start()
+            return items
+
+        return await loop.run_in_executor(None, _crawl)
 
     def get_predefined_maliki_texts(self) -> List[Dict[str, Any]]:
         """

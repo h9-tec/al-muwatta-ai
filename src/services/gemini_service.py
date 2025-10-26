@@ -8,6 +8,7 @@ and contextual understanding using Google's Gemini models with RAG enhancement.
 from typing import Any, Dict, List, Optional
 import google.generativeai as genai
 from loguru import logger
+import asyncio
 
 from ..config import settings
 from .rag_service import MalikiFiqhRAG
@@ -15,6 +16,8 @@ from ..utils.question_classifier import (
     is_fiqh_question,
     get_response_instructions,
     wants_sources,
+    is_arabic_text,
+    detect_arabic_dialect,
 )
 from ..api_clients import QuranAPIClient, QuranComAPIClient, HadithAPIClient, PrayerTimesAPIClient
 
@@ -68,14 +71,10 @@ class GeminiService:
             prompt: The input prompt for content generation
             temperature: Controls randomness (0.0 to 1.0)
             max_tokens: Maximum number of tokens to generate
+            stream: Whether to yield streaming chunks
 
         Returns:
             Generated content as string or None if generation fails
-
-        Example:
-            >>> service = GeminiService()
-            >>> content = await service.generate_content("Explain the concept of Tawheed")
-            >>> print(content)
         """
         try:
             generation_config = genai.types.GenerationConfig(
@@ -91,9 +90,8 @@ class GeminiService:
             if response.text:
                 logger.info("Content generated successfully")
                 return response.text
-            else:
-                logger.warning("No content generated")
-                return None
+            logger.warning("No content generated")
+            return None
 
         except Exception as e:
             logger.error(f"Failed to generate content: {e}")
@@ -204,11 +202,21 @@ Provide:
             ... )
         """
         # Enhanced language instruction for Arabic
-        if language == "arabic":
-            lang_instruction = """in Arabic, using the EXACT same dialect, style, and formality level as the user's question. 
-If the user writes in formal Modern Standard Arabic (MSA/الفصحى), respond in formal MSA. 
-If the user writes in colloquial/dialect Arabic (عامية), respond in the SAME colloquial style.
-Match their tone - be natural, conversational, and authentic in Arabic."""
+        dialect = detect_arabic_dialect(question) if is_arabic_text(question) else "msa"
+        if language == "arabic" or is_arabic_text(question):
+            if dialect != "msa":
+                lang_instruction = (
+                    "in Arabic, matching the user's dialect ({dialect})."
+                    " Maintain colloquial phrasing and tone while keeping jurisprudential terminology precise."
+                ).format(dialect=dialect)
+            else:
+                lang_instruction = (
+                    "in Arabic, using the EXACT same dialect, style, and formality level as the user's question.\n"
+                    "If the user writes in formal Modern Standard Arabic (MSA/الفصحى), respond in formal MSA.\n"
+                    "If the user writes in colloquial/dialect Arabic (عامية), respond in the SAME colloquial style.\n"
+                    "Match their tone - be natural, conversational, and authentic in Arabic."
+                )
+            language = "arabic"
         else:
             lang_instruction = "in clear, natural English"
 
@@ -218,11 +226,22 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
         
         # Get relevant context from RAG ONLY if it's a fiqh question
         rag_context = ""
+        rag_chunks: List[Dict[str, Any]] = []
         if is_fiqh and self.rag:
             try:
-                rag_context = self.rag.get_relevant_context(question, max_context_length=1500)
+                rag_results = self.rag.search(question, n_results=5, score_threshold=0.25)
+                rag_chunks = rag_results
+                rag_context = self.rag.get_relevant_context(
+                    question,
+                    max_context_length=1500,
+                )
                 if rag_context:
-                    logger.info(f"✅ RAG context retrieved for {question_category} question")
+                    logger.info(
+                        "✅ RAG context retrieved for {} question with {} chunks",
+                        question_category,
+                        len(rag_results),
+                    )
+                    logger.debug("RAG chunks: {}", rag_results)
             except Exception as e:
                 logger.warning(f"RAG search failed: {e}")
 
@@ -301,6 +320,92 @@ Do NOT show source citations unless user explicitly requests them.
                 "hadith": hadith_context,
                 "fiqh": rag_context,
             },
+            "rag_chunks": rag_chunks,
+        }
+
+    async def stream_fiqh_answer(
+        self,
+        question: str,
+        language: str,
+    ) -> Dict[str, Any]:
+        is_fiqh, category = is_fiqh_question(question)
+        if not is_fiqh:
+            raise RuntimeError("Streaming is limited to Maliki fiqh questions")
+
+        rag_context = ""
+        rag_chunks: List[Dict[str, Any]] = []
+        if self.rag:
+            rag_results = self.rag.search(question, n_results=5, score_threshold=0.25)
+            rag_chunks = rag_results
+            rag_context = self.rag.get_relevant_context(question, max_context_length=1500)
+        if not rag_context:
+            raise RuntimeError("Maliki fiqh context unavailable")
+
+        dialect = detect_arabic_dialect(question) if is_arabic_text(question) else "msa"
+        if language == "arabic" or is_arabic_text(question):
+            language = "arabic"
+            if dialect != "msa":
+                lang_instruction = f"in Arabic matching the user's {dialect} dialect."
+            else:
+                lang_instruction = "in Arabic matching the user's dialect and tone."
+        else:
+            lang_instruction = "in clear, natural English"
+
+        scholar_role = get_response_instructions(True, category, language)
+        prompt = f"""
+{scholar_role}
+
+**Use these verified Maliki references for your answer:**
+
+{rag_context}
+
+{question}
+
+Provide answer {lang_instruction}:
+1. Direct ruling per Maliki madhab
+2. Supporting evidence from Quran/Hadith
+3. Practical guidance
+
+Hide explicit reference citations unless asked. Answer with structured sections.
+"""
+
+        generation_config = genai.types.GenerationConfig(
+            temperature=0.6,
+            max_output_tokens=2000,
+        )
+
+        def _sync_stream():
+            for chunk in self.model.generate_content(
+                prompt,
+                generation_config=generation_config,
+                stream=True,
+            ):
+                text = getattr(chunk, "text", "") or ""
+                if text:
+                    yield text
+
+        async def iterator():
+            loop = asyncio.get_running_loop()
+            queue: asyncio.Queue[str] = asyncio.Queue()
+
+            def producer():
+                try:
+                    for piece in _sync_stream():
+                        asyncio.run_coroutine_threadsafe(queue.put(piece), loop)
+                finally:
+                    asyncio.run_coroutine_threadsafe(queue.put(None), loop)
+
+            loop.run_in_executor(None, producer)
+
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                yield item
+
+        return {
+            "stream": iterator(),
+            "rag_chunks": rag_chunks,
         }
 
     async def generate_thematic_connections(

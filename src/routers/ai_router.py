@@ -5,8 +5,11 @@ This router provides intelligent AI features using Google Gemini for
 Islamic knowledge, questions, explanations, and content generation.
 """
 
+import json
+
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from ..services import GeminiService, MultiLLMService
@@ -38,22 +41,42 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         logger.info(f"AI request using provider={provider}, model={model or 'default'}")
 
         gemini = GeminiService()
+
+        is_fiqh, category = is_fiqh_question(request.question)
+        if request.stream:
+            if provider != "gemini":
+                raise HTTPException(status_code=400, detail="Streaming only supported with Gemini provider")
+            if not is_fiqh:
+                raise HTTPException(status_code=400, detail="Streaming restricted to Maliki fiqh queries")
+            try:
+                stream_payload = await gemini.stream_fiqh_answer(
+                    request.question,
+                    language=request.language,
+                )
+            except Exception as exc:  # pragma: no cover - runtime safeguard
+                logger.error(f"Streaming setup failed: {exc}")
+                raise HTTPException(status_code=500, detail="Failed to stream answer") from exc
+
+            return StreamingResponse(
+                stream_payload["stream"],
+                media_type="text/plain; charset=utf-8",
+                headers={
+                    "X-RAG-Chunks": json.dumps(stream_payload["rag_chunks"])[:4000],
+                },
+            )
+
         result = await gemini.answer_islamic_question(
             request.question,
             language=request.language,
         )
-        answer_text = result.get("answer")
-        structured_sources = []
-        raw_context = result.get("raw_context", {})
-        for source in result.get("sources", []):
-            if source.get("content"):
-                structured_sources.append(source)
 
-        if not answer_text:
-            raise HTTPException(
-                status_code=503,
-                detail="Could not generate answer",
-            )
+        answer_text = result.get("answer")
+        rag_chunks = result.get("rag_chunks", [])
+        if not answer_text or (is_fiqh and not rag_chunks):
+            raise HTTPException(status_code=503, detail="Could not generate answer from Maliki sources")
+
+        structured_sources = [source for source in result.get("sources", []) if source.get("content")]
+        raw_context = result.get("raw_context", {})
 
         if provider != "gemini":
             service = MultiLLMService(provider=provider, api_key=request.api_key)
@@ -64,6 +87,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                     f"Quran context:\n{raw_context.get('quran', '')}\n\n"
                     f"Hadith context:\n{raw_context.get('hadith', '')}\n\n"
                     f"Fiqh context:\n{raw_context.get('fiqh', '')}\n\n"
+                    f"RAG chunks (debug):\n{rag_chunks}\n\n"
                     f"السؤال: {request.question}\n\n"
                     "الإجابة المقترحة:"
                     f"\n{answer_text}\n\n"
@@ -82,16 +106,19 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         return AIResponse(
             content=answer_text,
             language=request.language,
-                model=model or (provider if provider != "gemini" else settings.gemini_model),
+            model=model or (provider if provider != "gemini" else settings.gemini_model),
             metadata={
                 "question": request.question,
                 "provider": provider,
                 "model": model,
                 "include_sources": request.include_sources,
                 "sources": structured_sources,
+                "rag_chunks": rag_chunks,
             },
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error answering question: {e}")
         raise HTTPException(status_code=500, detail=str(e))
