@@ -20,11 +20,12 @@ from ..models.schemas import (
     TranslationRequest,
     AIResponse,
 )
+from ..utils.question_classifier import is_fiqh_question
 
 router = APIRouter(prefix="/api/v1/ai", tags=["AI Assistant"])
 
 
-@router.post("/ask", summary="Ask Islamic questions", response_model=AIResponse)
+@router.post("/ask", summary="Ask Islamic questions")
 async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
     """
     Ask any Islamic question and get an AI-generated answer.
