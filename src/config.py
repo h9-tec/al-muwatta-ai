@@ -38,8 +38,8 @@ class Settings(BaseSettings):
     
     # Google Gemini Configuration
     gemini_api_key: str = Field(
-        default="AIzaSyDfrRICbsvG94HYIFveimWgh9KQNvUpWYk",
-        description="Google Gemini API key",
+        default="",
+        description="Google Gemini API key - SET IN .env FILE",
     )
     gemini_model: str = Field(
         default="gemini-2.0-flash-exp",
