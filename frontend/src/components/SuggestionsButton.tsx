@@ -47,12 +47,31 @@ interface SuggestionsButtonProps {
 
 export function SuggestionsButton({ onSelect, disabled }: SuggestionsButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (closeTimeout) {
+      clearTimeout(closeTimeout);
+      setCloseTimeout(null);
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    const timeout = setTimeout(() => {
+      setIsOpen(false);
+    }, 300); // 300ms delay before closing
+    setCloseTimeout(timeout);
+  };
 
   return (
-    <div className="relative">
+    <div 
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
+        onClick={() => setIsOpen(!isOpen)}
         className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-islamic-green transition-colors flex items-center gap-2 border border-gray-300 rounded-lg hover:border-islamic-green"
         disabled={disabled}
       >
@@ -61,10 +80,7 @@ export function SuggestionsButton({ onSelect, disabled }: SuggestionsButtonProps
       </button>
 
       {isOpen && (
-        <div
-          onMouseEnter={() => setIsOpen(true)}
-          onMouseLeave={() => setIsOpen(false)}
-          className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-50"
+        <div className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-50"
         >
           {suggestions.map((suggestion, index) => (
             <button
