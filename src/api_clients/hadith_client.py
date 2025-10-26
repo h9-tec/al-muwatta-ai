@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from .base_client import BaseAPIClient
+from ..config import settings
 
 
 class HadithAPIClient(BaseAPIClient):
@@ -22,10 +23,14 @@ class HadithAPIClient(BaseAPIClient):
 
     # Alternative free Hadith API
     HADITH_API_BASE = "https://random-hadith-generator.vercel.app"
+    ALT_HADITH_SOURCE = "https://api.hadith.gading.dev"
 
     def __init__(self) -> None:
         """Initialize the Hadith API client."""
         super().__init__(base_url=self.SUNNAH_API_BASE)
+        self.sunnah_headers = {}
+        if settings.sunnah_api_key:
+            self.sunnah_headers["X-API-Key"] = settings.sunnah_api_key
 
     async def get_collections(self) -> List[Dict[str, Any]]:
         """
@@ -41,7 +46,7 @@ class HadithAPIClient(BaseAPIClient):
             'Sahih Bukhari'
         """
         try:
-            response = await self.get("/collections")
+            response = await self.get("/collections", headers=self.sunnah_headers or None)
             logger.info(f"Retrieved {len(response.get('data', []))} Hadith collections")
             return response.get("data", [])
         except Exception as e:
@@ -64,7 +69,10 @@ class HadithAPIClient(BaseAPIClient):
             >>> print(bukhari['totalHadith'])
         """
         try:
-            response = await self.get(f"/collections/{collection_name}")
+            response = await self.get(
+                f"/collections/{collection_name}",
+                headers=self.sunnah_headers or None,
+            )
             return response.get("data")
         except Exception as e:
             logger.error(f"Failed to get collection '{collection_name}': {e}")
@@ -86,7 +94,10 @@ class HadithAPIClient(BaseAPIClient):
             >>> print(books[0]['bookNumber'])
         """
         try:
-            response = await self.get(f"/collections/{collection_name}/books")
+            response = await self.get(
+                f"/collections/{collection_name}/books",
+                headers=self.sunnah_headers or None,
+            )
             return response.get("data", [])
         except Exception as e:
             logger.error(f"Failed to get books from '{collection_name}': {e}")
@@ -122,6 +133,7 @@ class HadithAPIClient(BaseAPIClient):
             response = await self.get(
                 f"/collections/{collection_name}/books/{book_number}/hadiths",
                 params=params,
+                headers=self.sunnah_headers or None,
             )
             return response
         except Exception as e:
@@ -153,7 +165,8 @@ class HadithAPIClient(BaseAPIClient):
         """
         try:
             response = await self.get(
-                f"/collections/{collection_name}/hadiths/{hadith_number}"
+                f"/collections/{collection_name}/hadiths/{hadith_number}",
+                headers=self.sunnah_headers or None,
             )
             return response.get("data")
         except Exception as e:
@@ -193,7 +206,7 @@ class HadithAPIClient(BaseAPIClient):
             if collection_name:
                 endpoint = f"/collections/{collection_name}/hadiths/search"
 
-            response = await self.get(endpoint, params=params)
+            response = await self.get(endpoint, params=params, headers=self.sunnah_headers or None)
             return response
         except Exception as e:
             logger.error(f"Failed to search Hadiths with query '{query}': {e}")
@@ -219,7 +232,22 @@ class HadithAPIClient(BaseAPIClient):
             response = await client.get("/hadiths")
             await client.close()
 
-            return response.get("data")
+            random_hadith = response.get("data")
+            if random_hadith:
+                return random_hadith
+
+            # Fallback to Gading.dev Hadith API
+            try:
+                fallback_client = BaseAPIClient(base_url=self.ALT_HADITH_SOURCE)
+                fallback = await fallback_client.get("/books/bukhari", params={"range": "1-1"})
+                await fallback_client.close()
+                data = fallback.get("data", {}).get("hadiths")
+                if data:
+                    return data[0]
+            except Exception as fallback_error:
+                logger.error(f"Fallback random Hadith source failed: {fallback_error}")
+
+            return None
         except Exception as e:
             logger.error(f"Failed to get random Hadith: {e}")
             return None

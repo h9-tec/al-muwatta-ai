@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from .base_client import BaseAPIClient
+from ..config import settings
 
 
 class QuranAPIClient(BaseAPIClient):
@@ -22,6 +23,41 @@ class QuranAPIClient(BaseAPIClient):
     def __init__(self) -> None:
         """Initialize the Quran API client."""
         super().__init__(base_url=self.ALQURAN_API_BASE)
+
+
+class QuranComAPIClient(BaseAPIClient):
+    """Client for accessing Quran.com v4 API."""
+
+    QURAN_COM_BASE = "https://api.quran.com/api/v4"
+
+    def __init__(self) -> None:
+        super().__init__(base_url=self.QURAN_COM_BASE)
+
+    async def get_chapters(self) -> Optional[Dict[str, Any]]:
+        try:
+            response = await self.get("/chapters")
+            return response
+        except Exception as exc:
+            logger.error(f"Failed to fetch chapters from quran.com: {exc}")
+            return None
+
+    async def get_surah(self, surah_number: int, language: str = "ar") -> Optional[Dict[str, Any]]:
+        try:
+            params = {"language": language}
+            response = await self.get(f"/chapters/{surah_number}", params=params)
+            return response
+        except Exception as exc:
+            logger.error(f"Failed to fetch chapter {surah_number} from quran.com: {exc}")
+            return None
+
+    async def get_ayah(self, verse_key: str, language: str = "ar") -> Optional[Dict[str, Any]]:
+        try:
+            params = {"language": language}
+            response = await self.get("/verses/by_key", params={"key": verse_key, **params})
+            return response
+        except Exception as exc:
+            logger.error(f"Failed to fetch verse {verse_key} from quran.com: {exc}")
+            return None
 
     async def get_full_quran(
         self,
@@ -80,7 +116,17 @@ class QuranAPIClient(BaseAPIClient):
                 raise ValueError("Surah number must be between 1 and 114")
 
             response = await self.get(f"/surah/{surah_number}/{edition}")
-            return response.get("data")
+            data = response.get("data")
+            if data:
+                return data
+
+            if settings.quran_com_use_live_api:
+                async with QuranComAPIClient() as quran_com:
+                    quran_com_response = await quran_com.get_surah(surah_number)
+                    if quran_com_response and quran_com_response.get("chapter"):
+                        return quran_com_response.get("chapter")
+
+            return None
         except ValueError as e:
             logger.error(f"Invalid surah number: {e}")
             return None
@@ -110,7 +156,17 @@ class QuranAPIClient(BaseAPIClient):
         """
         try:
             response = await self.get(f"/ayah/{ayah_reference}/{edition}")
-            return response.get("data")
+            data = response.get("data")
+            if data:
+                return data
+
+            if settings.quran_com_use_live_api:
+                async with QuranComAPIClient() as quran_com:
+                    primary = await quran_com.get_ayah(ayah_reference)
+                    if primary and primary.get("verses"):
+                        return primary
+
+            return None
         except Exception as e:
             logger.error(f"Failed to get Ayah {ayah_reference}: {e}")
             return None
@@ -140,7 +196,21 @@ class QuranAPIClient(BaseAPIClient):
                 raise ValueError("Ayah number must be between 1 and 6236")
 
             response = await self.get(f"/ayah/{ayah_number}/{edition}")
-            return response.get("data")
+            data = response.get("data")
+            if data:
+                return data
+
+            if settings.quran_com_use_live_api:
+                async with QuranComAPIClient() as quran_com:
+                    verse_key = response.get("data", {}).get("data", {}).get("verse_key")
+                    key = verse_key or ""
+                    if not key:
+                        key = str(ayah_number)
+                    verse = await quran_com.get_ayah(key)
+                    if verse:
+                        return verse
+
+            return None
         except ValueError as e:
             logger.error(f"Invalid ayah number: {e}")
             return None

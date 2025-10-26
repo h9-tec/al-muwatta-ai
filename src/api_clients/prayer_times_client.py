@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from .base_client import BaseAPIClient
+from ..config import settings
 
 
 class PrayerTimesAPIClient(BaseAPIClient):
@@ -401,7 +402,32 @@ class PrayerTimesAPIClient(BaseAPIClient):
             }
 
             response = await self.get("/qibla", params=params)
-            return response.get("data")
+            data = response.get("data")
+            if data:
+                return data
+
+            if settings.muslim_salat_api_key:
+                try:
+                    fallback_client = BaseAPIClient(
+                        base_url="https://muslimsalat.com",
+                        timeout=self.timeout,
+                    )
+                    fallback_response = await fallback_client.get(
+                        f"/{latitude},{longitude}/daily.json",
+                        params={"key": settings.muslim_salat_api_key},
+                    )
+                    direction = fallback_response.get("qibla_direction")
+                    if direction:
+                        return {
+                            "direction": float(direction),
+                            "latitude": latitude,
+                            "longitude": longitude,
+                            "source": "muslimsalat.com",
+                        }
+                except Exception as fallback_error:
+                    logger.error(f"MuslimSalat fallback failed: {fallback_error}")
+
+            return None
         except Exception as e:
             logger.error(f"Failed to get Qibla direction: {e}")
             return None
@@ -424,5 +450,16 @@ class PrayerTimesAPIClient(BaseAPIClient):
             return response.get("data", [])
         except Exception as e:
             logger.error(f"Failed to get Asma Al-Husna: {e}")
-            return []
+
+            # Fallback to Aladhan public endpoint if direct call fails
+            try:
+                fallback_client = BaseAPIClient(
+                    base_url="https://api.aladhan.com/v1",
+                    timeout=self.timeout,
+                )
+                fallback_response = await fallback_client.get("/asmaAlHusna")
+                return fallback_response.get("data", [])
+            except Exception as fallback_error:
+                logger.error(f"Asma Al-Husna fallback failed: {fallback_error}")
+                return []
 

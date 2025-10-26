@@ -11,7 +11,12 @@ from loguru import logger
 
 from ..config import settings
 from .rag_service import MalikiFiqhRAG
-from ..utils.question_classifier import is_fiqh_question, get_response_instructions, wants_sources
+from ..utils.question_classifier import (
+    is_fiqh_question,
+    get_response_instructions,
+    wants_sources,
+)
+from ..api_clients import QuranAPIClient, QuranComAPIClient, HadithAPIClient, PrayerTimesAPIClient
 
 
 class GeminiService:
@@ -40,6 +45,11 @@ class GeminiService:
                     logger.info("✅ RAG system enabled for Maliki fiqh")
                 except Exception as rag_error:
                     logger.warning(f"RAG initialization failed (will continue without RAG): {rag_error}")
+
+            self.quran_client = QuranAPIClient()
+            self.hadith_client = HadithAPIClient()
+            self.quran_com_client = QuranComAPIClient()
+            self.prayer_client = PrayerTimesAPIClient()
 
         except Exception as e:
             logger.error(f"Failed to initialize Gemini service: {e}")
@@ -215,12 +225,18 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
                     logger.info(f"✅ RAG context retrieved for {question_category} question")
             except Exception as e:
                 logger.warning(f"RAG search failed: {e}")
+
+        # Fetch Quranic verses from live API when question references specific ayah
+        quran_context = await self._fetch_quran_context(question)
+
+        # Fetch Hadith support for non-fiqh questions
+        hadith_context = await self._fetch_hadith_context(question, is_fiqh)
         
         # Get appropriate instructions based on question type
         scholar_role = get_response_instructions(is_fiqh, question_category, language)
 
         # Build prompt differently for fiqh vs non-fiqh questions
-        if is_fiqh and rag_context:
+        if is_fiqh and (rag_context or quran_context or hadith_context):
             # For FIQH questions: Use RAG and Maliki specialization
             if user_wants_sources:
                 citation_instruction = "IMPORTANT: Include source citations like [Source: Al-Risala] at the end of your answer."
@@ -233,6 +249,10 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
 **Use these Maliki fiqh sources for your answer (but hide citations unless user asks):**
 
 {rag_context}
+
+{quran_context}
+
+{hadith_context}
 
 {question}
 
@@ -250,6 +270,12 @@ Use proper formatting with headings and bullet points.
             # For NON-FIQH questions: General Islamic scholar (no madhab emphasis)
             prompt = f"""
 {scholar_role}
+
+**Authoritative sources gathered for you:**
+
+{quran_context}
+
+{hadith_context}
 
 {question}
 

@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
 
-from ..api_clients import QuranAPIClient
+from ..api_clients import QuranAPIClient, QuranComAPIClient
 from ..services import GeminiService
 from ..models.schemas import QuranVerseRequest, QuranVerseResponse
 
@@ -35,7 +35,12 @@ async def get_quran_editions(
             format_type=format_type,
             language=language,
         )
-        return editions
+        if editions:
+            return editions
+
+    async with QuranComAPIClient() as quran_com:
+        chapters = await quran_com.get_chapters()
+        return chapters or []
 
 
 @router.get("/surahs/{surah_number}", summary="Get complete Surah")
@@ -221,10 +226,19 @@ async def search_quran(
     """
     async with QuranAPIClient() as client:
         results = await client.search_quran(query, surah=surah, edition=edition)
+        if results.get("matches"):
+            return {
+                "results": results,
+                "query": query,
+                "source": "alquran.cloud API",
+            }
+
+    async with QuranComAPIClient() as quran_com:
+        quran_com_results = await quran_com.get_chapters()
         return {
-            "results": results,
+            "results": quran_com_results,
             "query": query,
-            "source": "alquran.cloud API",
+            "source": "quran.com API",
         }
 
 

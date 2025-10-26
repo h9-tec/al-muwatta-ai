@@ -56,6 +56,20 @@ class Settings(BaseSettings):
         description="Ollama server URL",
     )
 
+    # External API Keys / Toggles
+    sunnah_api_key: Optional[str] = Field(
+        default=None,
+        description="API key for sunnah.com hadith API",
+    )
+    muslim_salat_api_key: Optional[str] = Field(
+        default=None,
+        description="Optional API key for MuslimSalat prayer times API",
+    )
+    quran_com_use_live_api: bool = Field(
+        default=True,
+        description="Whether to call Quran.com API v4 before falling back to AlQuran Cloud",
+    )
+
     # API Rate Limiting
     rate_limit_calls: int = Field(
         default=100,
