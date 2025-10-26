@@ -9,7 +9,8 @@ from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Body
 from loguru import logger
 
-from ..services import GeminiService
+from ..services import GeminiService, MultiLLMService
+from ..config import settings
 from ..models.schemas import (
     IslamicQuestionRequest,
     ThematicStudyRequest,
@@ -32,25 +33,60 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         AI-generated answer with sources
     """
     try:
-        gemini = GeminiService()
+        provider = request.provider or "gemini"
+        model = request.model
+        logger.info(f"AI request using provider={provider}, model={model or 'default'}")
 
-        answer, structured_sources = await gemini.answer_islamic_question(
+        gemini = GeminiService()
+        result = await gemini.answer_islamic_question(
             request.question,
             language=request.language,
         )
+        answer_text = result.get("answer")
+        structured_sources = []
+        raw_context = result.get("raw_context", {})
+        for source in result.get("sources", []):
+            if source.get("content"):
+                structured_sources.append(source)
 
-        if not answer:
+        if not answer_text:
             raise HTTPException(
                 status_code=503,
                 detail="Could not generate answer",
             )
 
+        if provider != "gemini":
+            service = MultiLLMService(provider=provider, api_key=request.api_key)
+            prompt = answer_text
+            if raw_context:
+                prompt = (
+                    "استعن بالسياق التالي للإجابة بدقة ووضوح:\n\n"
+                    f"Quran context:\n{raw_context.get('quran', '')}\n\n"
+                    f"Hadith context:\n{raw_context.get('hadith', '')}\n\n"
+                    f"Fiqh context:\n{raw_context.get('fiqh', '')}\n\n"
+                    f"السؤال: {request.question}\n\n"
+                    "الإجابة المقترحة:"
+                    f"\n{answer_text}\n\n"
+                    "طوّر الإجابة السابقة بلغة عربية فصيحة واضحة، مع الحفاظ على الدقة الشرعية وذكر الأدلة ضمن المتن دون ترقيم إن أمكن."
+                )
+
+            generated = await service.generate(
+                prompt=prompt,
+                model=model or "",
+                temperature=0.6,
+                max_tokens=1500,
+            )
+            if generated:
+                answer_text = generated
+
         return AIResponse(
-            content=answer,
+            content=answer_text,
             language=request.language,
-            model="gemini-2.0-flash-exp",
+                model=model or (provider if provider != "gemini" else settings.gemini_model),
             metadata={
                 "question": request.question,
+                "provider": provider,
+                "model": model,
                 "include_sources": request.include_sources,
                 "sources": structured_sources,
             },

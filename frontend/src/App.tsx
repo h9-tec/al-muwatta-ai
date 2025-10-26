@@ -136,7 +136,7 @@ function App() {
       const detectedLang = detectLanguage(messageText);
       const languageInstruction = getLanguageInstruction(detectedLang, messageText);
       
-      // Send with language instruction
+      // Send with language instruction and provider selection
       const enhancedPrompt = languageInstruction + messageText;
       const response = await aiApi.ask(enhancedPrompt, detectedLang);
       

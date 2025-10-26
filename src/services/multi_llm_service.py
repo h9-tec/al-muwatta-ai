@@ -13,6 +13,17 @@ import os
 from ..config import settings
 
 
+def _safe_ascii(value: Optional[str], fallback: str) -> str:
+    if not value:
+        return fallback
+    try:
+        value.encode("ascii")
+        return value
+    except UnicodeEncodeError:
+        cleaned = value.encode("ascii", "ignore").decode() or fallback
+        return cleaned
+
+
 class MultiLLMService:
     """Unified service supporting multiple LLM providers."""
 
@@ -143,12 +154,16 @@ class MultiLLMService:
                 models = []
                 
                 for model in data.get('data', []):
-                    # Filter for good Arabic models
-                    model_id = model['id']
+                    # Filter for good Arabic-friendly models
+                    model_id = model.get('id')
+                    if not model_id:
+                        continue
+
                     if any(x in model_id.lower() for x in ['qwen', 'llama', 'mistral', 'gemini']):
+                        safe_name = _safe_ascii(model.get('name', model_id), model_id)
                         models.append({
                             'id': model_id,
-                            'name': model.get('name', model_id),
+                            'name': safe_name,
                             'context_length': model.get('context_length', 0),
                             'provider': 'openrouter',
                             'pricing': model.get('pricing', {}),
@@ -296,13 +311,24 @@ class MultiLLMService:
     ) -> Optional[str]:
         """Generate using OpenAI-compatible APIs."""
         try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            }
+            if self.provider == "openrouter":
+                headers.setdefault(
+                    "HTTP-Referer",
+                    _safe_ascii(settings.app_base_url, "http://localhost"),
+                )
+                headers.setdefault(
+                    "X-Title",
+                    _safe_ascii(settings.app_name, "Al-Muwatta"),
+                )
+
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
                     f"{self.base_url}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                    },
+                    headers=headers,
                     json={
                         "model": model,
                         "messages": [{"role": "user", "content": prompt}],
@@ -311,11 +337,16 @@ class MultiLLMService:
                     }
                 )
                 response.raise_for_status()
-                
+
                 data = response.json()
                 return data['choices'][0]['message']['content']
 
+        except httpx.HTTPStatusError as exc:
+            logger.error(
+                f"API generation failed ({self.provider}) - status {exc.response.status_code}: {exc.response.text}"
+            )
+            return None
         except Exception as e:
-            logger.error(f"API generation failed: {e}")
+            logger.error(f"API generation failed ({self.provider}): {e}")
             return None
 

@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     )
     app_version: str = Field(default="1.0.0", description="Application version")
     debug: bool = Field(default=True, description="Debug mode")
+    app_base_url: Optional[str] = Field(default=None, description="Public base URL used for provider headers")
 
     # LLM Configuration
     use_local_llm: bool = Field(

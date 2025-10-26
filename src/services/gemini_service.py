@@ -186,7 +186,7 @@ Provide:
         self,
         question: str,
         language: str = "arabic",
-    ) -> Optional[str]:
+    ) -> Dict[str, Any]:
         """
         Answer Islamic questions with scholarly references.
 
@@ -292,7 +292,16 @@ Do NOT show source citations unless user explicitly requests them.
 
             logger.info(f"ℹ️ Non-fiqh {question_category} question - using general Islamic knowledge")
 
-        return await self.generate_content(prompt, temperature=0.6, max_tokens=2500)
+        answer = await self.generate_content(prompt, temperature=0.6, max_tokens=2500)
+        return {
+            "answer": answer,
+            "sources": structured_sources,
+            "raw_context": {
+                "quran": quran_context,
+                "hadith": hadith_context,
+                "fiqh": rag_context,
+            },
+        }
 
     async def generate_thematic_connections(
         self,
