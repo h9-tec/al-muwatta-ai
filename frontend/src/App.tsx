@@ -261,8 +261,8 @@ function App() {
                     )}
                   </button>
                 </div>
-                <p className={`text-xs mt-2 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Powered by Google Gemini AI • Press Enter to send
+                <p className={`text-sm mt-2 text-center arabic-text font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  لا إمام سوى مالك
                 </p>
               </div>
             </div>
