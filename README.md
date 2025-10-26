@@ -737,7 +737,7 @@ If you use this project in research or production:
 ```bibtex
 @software{almuwatta2025,
   title = {Al-Muwatta: Maliki Fiqh Assistant with RAG},
-  author = {h9-tec},
+  author = {Hesham Haroon},
   year = {2025},
   url = {https://github.com/h9-tec/al-muwatta-ai},
   note = {Islamic knowledge platform specialized in Maliki jurisprudence}
