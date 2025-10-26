@@ -1,607 +1,386 @@
-# Al-Muwatta (الموطأ) - Maliki Fiqh Assistant
+# Al-Muwatta - Maliki Fiqh Assistant
+## الموطأ - مساعد الفقه المالكي
 
 <div align="center">
 
-![Al-Muwatta Welcome Screen](screenshots/04-welcome-with-quick-actions.png)
+![Al-Muwatta Interface](screenshots/04-welcome-with-quick-actions.png)
 
-**A Revolutionary AI-Powered Maliki Fiqh Platform**  
-*RAG-Enhanced Islamic Knowledge Assistant with 21+ Authentic Sources*
+**Specialized Islamic Knowledge Platform for Maliki Jurisprudence**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB.svg)](https://react.dev)
-[![Google Gemini](https://img.shields.io/badge/Gemini-2.0_Flash-4285F4.svg)](https://ai.google.dev/)
-[![Qdrant](https://img.shields.io/badge/Qdrant-Vector_DB-DC244C.svg)](https://qdrant.tech/)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[Features](#-key-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Architecture](#-architecture) • [API](#-api-documentation) • [Contributing](#-contributing)
+[Features](#features) • [Installation](#installation) • [Documentation](#documentation) • [Architecture](#architecture) • [Contributing](#contributing)
 
 </div>
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Screenshots](#-screenshots)
-- [Architecture](#-architecture)
-- [Technology Stack](#-technology-stack)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [API Documentation](#-api-documentation)
-- [RAG System](#-rag-system-maliki-fiqh)
-- [Contributing](#-contributing)
-- [Roadmap](#-roadmap)
-- [License](#-license)
+- [Overview](#overview)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Technical Architecture](#technical-architecture)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [API Documentation](#api-documentation)
+- [Development](#development)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## 🌟 Overview
+## Overview
 
-**Al-Muwatta (الموطأ)** - named after Imam Malik's legendary hadith compilation - is a cutting-edge Islamic knowledge platform that combines authentic Islamic content APIs with advanced AI (Gemini, Ollama, OpenRouter, Groq, OpenAI, Claude) and a specialized Retrieval-Augmented Generation (RAG) system focused on **Maliki Fiqh**.
+**Al-Muwatta** is an Islamic knowledge platform specialized in Maliki jurisprudence, combining retrieval-augmented generation (RAG) with multiple LLM providers. Named after Imam Malik's foundational hadith compilation, the platform provides authenticated responses from classical Maliki texts.
 
-**Latest Updates:**
-- Multi-provider LLM support (6 providers)
-- Session persistence (chat history saved)
-- Smart question classification (fiqh vs non-fiqh)
-- Hidden citations (show only when requested)
-- Settings modal for provider/model selection
-- New chat session button
-- Professional suggestions dropdown
+**منصة الموطأ** هي منصة معرفة إسلامية متخصصة في الفقه المالكي، تجمع بين تقنية الاسترجاع المعزز (RAG) ومزودي نماذج لغوية متعددة. المنصة توفر إجابات موثقة من المصادر المالكية الأصيلة.
+
+### Core Capabilities
+
+**English:**
+- Maliki fiqh knowledge base with 21+ authenticated texts
+- Multi-provider LLM support (Ollama, OpenRouter, Groq, OpenAI, Claude, Gemini)
+- Semantic search across Islamic content
+- Comprehensive Islamic APIs integration
+- RTL Arabic interface with dialect detection
+
+**العربية:**
+- قاعدة معرفية للفقه المالكي تضم 21+ نصاً موثقاً
+- دعم متعدد لمزودي النماذج اللغوية (محلي ومستضاف)
+- بحث دلالي عبر المحتوى الإسلامي
+- تكامل شامل مع واجهات برمجة التطبيقات الإسلامية
+- واجهة عربية بنظام RTL مع كشف تلقائي للهجة
+
+---
+
+## Features
+
+### Maliki Fiqh Knowledge Base
+
+**English:**
+The platform implements RAG using Qdrant vector database containing authenticated Maliki texts:
+
+- **Primary Sources**: Al-Risala (Ibn Abi Zayd), Mukhtasar Khalil, Al-Mudawwana
+- **Coverage**: Taharah, Salah, Zakat, Sawm, Hajj, Muamalat, Family Law
+- **Search**: Semantic search with 384-dimensional embeddings
+- **Expandable**: Upload PDF/images to extend knowledge base
+
+**العربية:**
+تستخدم المنصة تقنية RAG مع قاعدة بيانات Qdrant تحتوي على نصوص مالكية موثقة:
+
+- **المصادر الأساسية**: الرسالة (ابن أبي زيد)، مختصر خليل، المدونة
+- **التغطية**: الطهارة، الصلاة، الزكاة، الصيام، الحج، المعاملات، الأحوال الشخصية
+- **البحث**: بحث دلالي باستخدام متجهات 384 بُعداً
+- **قابل للتوسع**: رفع ملفات PDF أو صور لتوسيع قاعدة المعرفة
+
+### Multi-Provider LLM Support
+
+**Supported Providers:**
+
+| Provider | Type | API Required | Arabic Support |
+|----------|------|--------------|----------------|
+| Ollama | Local | No | Excellent (Qwen2.5) |
+| OpenRouter | Cloud | Yes | Excellent |
+| Groq | Cloud | Yes | Good |
+| OpenAI | Cloud | Yes | Good |
+| Claude | Cloud | Yes | Good |
+| Gemini | Cloud | Yes | Excellent |
+
+**مزودو الخدمة المدعومون:**
+- **Ollama**: محلي ومجاني (يعمل على جهازك بدون إنترنت)
+- **OpenRouter**: الوصول إلى 100+ نموذج
+- **Groq**: سرعة استجابة عالية جداً
+- **OpenAI**: GPT-4 وGPT-3.5
+- **Claude**: Anthropic (جودة عالية)
+- **Gemini**: Google (الافتراضي)
+
+### Intelligent Question Classification
+
+The system automatically detects question type and responds accordingly:
+
+- **Fiqh questions**: Activates Maliki RAG, cites sources
+- **Quran questions**: Provides Quranic content without madhab references
+- **Hadith questions**: General hadith search and explanation
+- **General questions**: Broad Islamic knowledge
+
+**التصنيف الذكي للأسئلة:**
+- **أسئلة فقهية**: يستخدم مصادر المذهب المالكي
+- **أسئلة قرآنية**: يقدم المحتوى القرآني بدون ذكر المذاهب
+- **أسئلة حديثية**: بحث وشرح الأحاديث
+- **أسئلة عامة**: معلومات إسلامية شاملة
+
+### Islamic Content Integration
+
+**APIs Integrated:**
+- **alquran.cloud**: 114 Surahs, 100+ translations, tafsir
+- **aladhan.com**: Prayer times worldwide, Islamic calendar, Qibla direction
+- **sunnah.com**: Hadith collections (requires API key)
+
+**واجهات برمجة التطبيقات المدمجة:**
+- **القرآن**: 114 سورة، 100+ ترجمة
+- **أوقات الصلاة**: تغطية عالمية، التقويم الهجري، اتجاه القبلة
+- **الأحاديث**: مجموعات متعددة
+
+---
+
+## Screenshots
 
 ### Welcome Interface
 
-![Welcome Page](screenshots/01-welcome-page.png)
+![Welcome Screen](screenshots/01-welcome-page.png)
 
-The beautiful welcome screen features:
-- ✨ **Al-Muwatta branding** - الموطأ in elegant Arabic calligraphy
-- 🕌 **Arabic-first welcome message** - Bilingual greeting
-- 📚 **21+ Maliki Fiqh books** in the knowledge base
-- 🎯 **Quick Action buttons** - Surah Al-Fatiha, Daily Reminder, Search Hadith, 99 Names
-- 🕌 **Prayer Times widget** - Auto-location with all 5 prayers
-- 🎨 **Islamic design** - Beautiful gradient cards with modern UI
-
-### What Makes It Unique?
-
-1. **🎯 Maliki Fiqh Specialization** - First AI assistant with dedicated Maliki jurisprudence knowledge base
-2. **🤖 RAG-Enhanced Responses** - Answers cite authentic sources (Al-Risala, Mukhtasar Khalil, Al-Mudawwana)
-3. **🌍 Perfect Arabic Support** - RTL layout, dialect matching, beautiful typography
-4. **📚 Comprehensive Coverage** - Quran, Hadith, Prayer Times, Islamic Calendar, and Fiqh
-5. **📤 User-Expandable** - Upload books (images/PDFs) to grow the knowledge base
-6. **🔍 Semantic Search** - Multilingual vector search in 384-dimensional space
-7. **⚡ Production-Ready** - FastAPI backend, React frontend, Qdrant vector DB
+**Features shown:**
+- Bilingual welcome message (Arabic priority)
+- Prayer times widget with geolocation
+- Suggestion prompts
+- Knowledge base statistics
 
 ---
 
-## ✨ Key Features
+### Maliki Fiqh Response with RAG
 
-### 🤖 AI-Powered Islamic Assistant
+![Maliki Fiqh Answer](screenshots/02-arabic-chat-maliki-hand-placement.png)
 
-- **Multi-Provider LLM Support** - Choose from 6 providers:
-  - Ollama (local, free, private)
-  - OpenRouter (100+ models)
-  - Groq (super fast)
-  - OpenAI (GPT-4)
-  - Claude (Anthropic)
-  - Gemini (Google)
-- **Settings Modal** - Configure provider, API keys, and models via UI
-- **Automatic Language Detection** - Responds in user's language/dialect
-- **Dialect Matching** - Understands formal Arabic (فصحى) and colloquial (عامية)
-- **Smart Question Classification** - Detects fiqh vs non-fiqh questions
-- **Context-Aware Responses** - Uses RAG for fiqh, general knowledge for others
-- **Hidden Citations** - Clean answers, sources shown only when requested
-
-### 📚 Islamic Content APIs
-
-| API | Content | Status |
-|-----|---------|--------|
-| **Quran API** | 114 Surahs, 100+ translations | ✅ Working |
-| **Prayer Times API** | Worldwide coverage, 13 calculation methods | ✅ Working |
-| **Hadith API** | Multiple collections, search | ⚠️ Requires API key |
-| **Islamic Calendar** | Hijri/Gregorian conversion | ✅ Working |
-
-### 🔍 RAG System - Maliki Fiqh Knowledge Base
-
-- **21+ Documents** covering all major Maliki fiqh topics
-- **Qdrant Vector Database** - Fast, scalable, production-ready
-- **Semantic Search** - Find relevant content by meaning, not keywords
-- **Source Citations** - Every answer references authentic texts
-- **Expandable** - Users can upload their own books
-
-**Topics Covered:**
-- Taharah (Purification) - Wudu, Ghusl, Tayammum
-- Salah (Prayer) - Daily prayers, Jumu'ah, Eid, Janazah
-- Sawm (Fasting) - Ramadan rulings, breaking fast
-- Zakat (Charity) - Nisab, rates, distribution
-- Hajj - Pilgrimage, Udhiyah
-- Muamalat - Business transactions
-- Family Law - Marriage, divorce
-
-### 📤 Upload & Expand
-
-- **Image Upload** - OCR book pages and add to knowledge base
-- **PDF Upload** - Extract full books automatically
-- **DeepSeek-OCR Ready** - GPU-accelerated OCR (optional)
-- **Manual Text Entry** - Add content directly via API
-
-### 🆕 Latest Features
-
-- **Multi-Provider LLM** - Switch between Ollama, OpenRouter, Groq, OpenAI, Claude, Gemini
-- **Settings Modal** - Configure AI provider and model via UI
-- **Session Persistence** - Chat history and dark mode saved to localStorage
-- **New Chat Button** - Start fresh conversation anytime
-- **Suggestions Dropdown** - Hover to see expert-level query suggestions
-- **Smart AI** - Only mentions Maliki fiqh for actual fiqh questions
-- **Hidden Citations** - Clean responses, sources embedded (show on request)
-
-### 🌍 Exceptional Arabic Support
-
-- ✅ **RTL (Right-to-Left) Layout** - Automatic for Arabic content
-- ✅ **Beautiful Typography** - Amiri font, 1.1em size, 1.8 line-height
-- ✅ **Bidirectional Markdown** - Proper rendering of mixed content
-- ✅ **Dialect Intelligence** - Matches Egyptian, Gulf, Moroccan Arabic
-- ✅ **Arabic Font Families** - Traditional Arabic, Amiri fallbacks
-
-### 🎨 Modern & Beautiful UI
-
-- **Full-Width Chat** - Maximum screen utilization
-- **Markdown Rendering** - Headers, lists, code blocks, tables
-- **Islamic Design System** - Green (#006B3F) and Teal (#008B8B) palette
-- **Glass Morphism** - Modern, elegant UI elements
-- **Responsive** - Works on desktop, tablet, mobile
-- **Dark Mode Ready** - Theme toggle included
+**Technical demonstration:**
+- RTL layout for Arabic
+- Source attribution from Maliki texts
+- Structured markdown rendering
+- Context-aware response generation
 
 ---
 
-## 📸 Screenshots
+### General Islamic Q&A
 
+![Islamic Q&A](screenshots/03-arabic-conversation-parents.png)
 
-## 🏗️ Architecture
+**Capabilities:**
+- Quranic verse citation
+- Hadith references
+- Comprehensive Islamic guidance
+- Natural Arabic language processing
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FRONTEND (React)                         │
-│  ┌────────────┐  ┌──────────────┐  ┌─────────────────────────┐ │
-│  │ Chat UI    │  │ Prayer Times │  │ Upload Component        │ │
-│  │ (RTL/LTR)  │  │ Widget       │  │ (Image/PDF)             │ │
-│  └──────┬─────┘  └──────┬───────┘  └───────────┬─────────────┘ │
-│         │                │                      │               │
-│         └────────────────┴──────────────────────┘               │
-│                          │                                       │
-│                    Axios API Client                              │
-└──────────────────────────┼──────────────────────────────────────┘
-                           │
-                    FastAPI Backend
-                           │
-┌──────────────────────────┼──────────────────────────────────────┐
-│                          ▼                                       │
-│  ┌─────────────────────────────────────────────────────┐       │
-│  │          API Routers (FastAPI)                       │       │
-│  │  ┌──────────┐ ┌────────┐ ┌────────────┐ ┌────────┐ │       │
-│  │  │ Quran    │ │ Hadith │ │ Prayer     │ │ Upload │ │       │
-│  │  │ Router   │ │ Router │ │ Times      │ │ Router │ │       │
-│  │  └────┬─────┘ └───┬────┘ └─────┬──────┘ └───┬────┘ │       │
-│  └───────┼───────────┼────────────┼─────────────┼──────┘       │
-│          │           │            │             │              │
-│  ┌───────▼───────────▼────────────▼─────────────▼──────┐       │
-│  │           Business Logic Services                    │       │
-│  │  ┌──────────────┐  ┌────────────────────────────┐  │       │
-│  │  │ Gemini AI    │  │  Maliki Fiqh RAG Service   │  │       │
-│  │  │ Service      │  │  (Qdrant + Embeddings)     │  │       │
-│  │  └──────┬───────┘  └────────┬───────────────────┘  │       │
-│  └─────────┼──────────────────┼──────────────────────┘       │
-│            │                  │                               │
-│  ┌─────────▼──────────┐  ┌────▼─────────────────────┐        │
-│  │  External APIs     │  │  Qdrant Vector Database  │        │
-│  │  • alquran.cloud   │  │  • 21+ Maliki Documents  │        │
-│  │  • aladhan.com     │  │  • 384-dim Embeddings    │        │
-│  │  • sunnah.com      │  │  • Semantic Search       │        │
-│  └────────────────────┘  └──────────────────────────┘        │
-└─────────────────────────────────────────────────────────────────┘
-```
+---
 
-### Data Flow
+## Technical Architecture
+
+### System Components
 
 ```
-User Question (Arabic/English)
+┌─────────────────────────────────────────────────────────────┐
+│                      Frontend Layer                          │
+│  React 18 + TypeScript + Tailwind CSS                        │
+│  • Chat Interface (RTL/LTR)                                  │
+│  • Settings Modal                                            │
+│  • File Upload Component                                     │
+└────────────────────┬────────────────────────────────────────┘
+                     │ REST API
+┌────────────────────▼────────────────────────────────────────┐
+│                   Backend Layer (FastAPI)                    │
+│  ┌──────────────┐  ┌─────────────┐  ┌──────────────────┐   │
+│  │ API Routers  │  │  Services   │  │  Data Clients    │   │
+│  └──────────────┘  └─────────────┘  └──────────────────┘   │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────────────┐
+│                   Data & AI Layer                            │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────────┐    │
+│  │ Qdrant DB   │  │  LLM APIs    │  │  External APIs  │    │
+│  │ (Vectors)   │  │  (Gemini/    │  │  (Quran, Prayer)│    │
+│  │             │  │   Ollama)    │  │                 │    │
+│  └─────────────┘  └──────────────┘  └─────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### RAG Pipeline
+
+```
+User Query
     ↓
-Language Detection
+Question Classification (fiqh vs non-fiqh)
     ↓
-RAG Retrieval (Semantic Search in Qdrant)
+[If fiqh] → Vector Search (Qdrant) → Top 3 Maliki texts
     ↓
-Context Enrichment (Top 3 relevant Maliki texts)
+Context Injection + Prompt Engineering
     ↓
-Google Gemini 2.0 (With RAG context + Language instruction)
+LLM Generation (Gemini/Ollama/etc.)
     ↓
-Response in User's Language/Dialect
-    ↓
-Markdown Rendering (RTL for Arabic, LTR for English)
-    ↓
-Display with Source Citations
+Response (with optional source citations)
+```
+
+### Technology Stack
+
+**Backend:**
+```
+- Python 3.12+
+- FastAPI 0.111.0 (async web framework)
+- Pydantic 2.9 (data validation)
+- Qdrant 1.15+ (vector database)
+- Sentence Transformers 5.1+ (embeddings)
+- httpx 0.28+ (async HTTP client)
+```
+
+**Frontend:**
+```
+- React 18.3 (UI framework)
+- TypeScript 5.6 (type safety)
+- Vite 4.5 (build tool)
+- Tailwind CSS 3.4 (styling)
+- React Markdown (content rendering)
+```
+
+**AI/ML:**
+```
+- Google Gemini 2.0 Flash
+- Ollama (local inference)
+- Sentence Transformers: paraphrase-multilingual-MiniLM-L12-v2
+- Vector Dimensions: 384
+- Similarity: Cosine distance
 ```
 
 ---
 
-## 🛠️ Technology Stack
-
-### Backend
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Python** | 3.12+ | Core language |
-| **FastAPI** | 0.111.0 | REST API framework |
-| **Google Gemini** | 2.0 Flash | LLM for responses |
-| **Qdrant** | 1.15.1 | Vector database |
-| **Sentence Transformers** | 5.1.2 | Multilingual embeddings |
-| **Pydantic** | 2.9.2 | Data validation |
-| **httpx** | 0.28.1 | Async HTTP client |
-| **Scrapy** | 2.13.3 | Web scraping |
-| **pdfplumber** | 0.11.7 | PDF text extraction |
-
-### Frontend
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React** | 18.3.1 | UI framework |
-| **TypeScript** | 5.6.2 | Type safety |
-| **Vite** | 4.5.3 | Build tool |
-| **Tailwind CSS** | 3.4.1 | Styling |
-| **React Markdown** | Latest | Markdown rendering |
-| **Axios** | Latest | API client |
-| **Lucide React** | Latest | Icons |
-
-### AI & ML
-
-| Component | Technology | Details |
-|-----------|------------|---------|
-| **LLM** | Google Gemini 2.0 Flash | Arabic-optimized, fast responses |
-| **Embeddings** | paraphrase-multilingual-MiniLM-L12-v2 | 384 dimensions, 50+ languages |
-| **Vector DB** | Qdrant | Cosine similarity, HNSW index |
-| **OCR** | DeepSeek-OCR Ready | Optional GPU-accelerated |
-
----
-
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
-- Python 3.12+
-- Node.js 18+ (or 20+ for latest Vite)
-- pip & npm
-- 4GB+ RAM (for embedding model)
-- Optional: CUDA GPU (for DeepSeek-OCR)
+**Required:**
+- Python 3.12 or higher
+- Node.js 18 or higher
+- 4GB RAM minimum
+- Internet connection (for API access)
 
-### Quick Start (5 Minutes)
+**Optional:**
+- Ollama (for local LLM)
+- CUDA GPU (for OCR)
+
+### Quick Start
 
 ```bash
-# 1. Clone the repository
+# Clone repository
 git clone https://github.com/h9-tec/al-muwatta-ai.git
 cd al-muwatta-ai
 
-# 2. Set up backend
+# Backend setup
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Configure API keys
-# Edit the GEMINI_API_KEY in src/config.py or create .env file
-echo "GEMINI_API_KEY=your_key_here" > .env
+# Configure environment
+cp .env.example .env
+# Edit .env and add your API keys
 
-# 4. Initialize Maliki Fiqh RAG database
+# Initialize vector database
 python initialize_rag.py
 
-# 5. Start backend
-python run.py &
-
-# 6. Set up frontend (in new terminal)
-cd frontend
-npm install
-npm run dev &
-
-# 7. Open browser
-# Frontend: http://localhost:5173
-# API Docs: http://localhost:8000/docs
-```
-
----
-
-## 💻 Usage
-
-### Starting the Application
-
-**Option 1: Manual Start**
-```bash
-# Terminal 1 - Backend
-cd /path/to/al-muwatta-ai
-source venv/bin/activate
+# Start backend
 python run.py
 
-# Terminal 2 - Frontend
-cd /path/to/al-muwatta-ai/frontend
+# Frontend setup (new terminal)
+cd frontend
+npm install
+npm run dev
+
+# Access application
+# Frontend: http://localhost:5173
+# API: http://localhost:8000/docs
+```
+
+### البدء السريع (عربي)
+
+```bash
+# استنساخ المستودع
+git clone https://github.com/h9-tec/al-muwatta-ai.git
+cd al-muwatta-ai
+
+# إعداد الخادم
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# إعداد المتغيرات
+cp .env.example .env
+# أضف مفاتيح API في ملف .env
+
+# تهيئة قاعدة البيانات
+python initialize_rag.py
+
+# تشغيل الخادم
+python run.py
+
+# في نافذة جديدة - إعداد الواجهة
+cd frontend
+npm install
 npm run dev
 ```
 
-**Option 2: Using Start Script**
-```bash
-./start_app.sh
-```
-
-### Stopping the Application
-
-```bash
-pkill -f "python run.py"
-pkill -f "npm run dev"
-```
-
 ---
 
-## 🎯 Features in Action
+## Configuration
 
-### 1. Ask Questions in Any Language
+### Environment Variables
+
+Create `.env` file in project root:
+
+```bash
+# LLM Provider Configuration
+GEMINI_API_KEY=your_gemini_api_key
+USE_LOCAL_LLM=False
+
+# Ollama Configuration (optional)
+OLLAMA_MODEL=qwen2.5:7b
+OLLAMA_BASE_URL=http://localhost:11434
+
+# Application Settings
+APP_NAME=Al-Muwatta - الموطأ | Maliki Fiqh Assistant
+DEBUG=True
+LOG_LEVEL=INFO
+
+# Database
+DATABASE_URL=sqlite:///./al_muwatta.db
+```
+
+### Ollama Setup (Local LLM)
 
 **English:**
-```
-"What is the Maliki position on raising hands in prayer?"
-```
 
-**Response includes:**
-- ✅ Detailed Maliki ruling
-- ✅ Source citation: [Al-Risala, Mukhtasar Khalil]
-- ✅ Comparison with other madhabs
-- ✅ Practical guidance
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
 
-**Arabic (Formal):**
-```
-"ما هو حكم رفع اليدين في الصلاة عند المالكية؟"
-```
+# Download model (recommended for Arabic)
+ollama pull qwen2.5:7b
 
-**Arabic (Colloquial Egyptian):**
-```
-"إيه الحكم بتاع رفع الإيدين في الصلاة عند المالكية؟"
+# Start Ollama server
+ollama serve
+
+# Test
+python test_ollama.py
 ```
 
-*AI automatically matches your dialect and formality level!*
+**العربية:**
 
-### 2. Upload Books to Expand Knowledge Base
+```bash
+# تثبيت Ollama
+curl -fsSL https://ollama.com/install.sh | sh
 
-1. Click the **📤 Upload** button (bottom-left)
-2. Choose **Image** (JPG/PNG) or **PDF**
-3. System extracts text via OCR
-4. Automatically adds to Qdrant vector database
-5. AI can now reference your uploaded book!
+# تحميل النموذج (موصى به للعربية)
+ollama pull qwen2.5:7b
 
-**Supported:**
-- 📷 Book page images
-- 📄 Full PDF books
-- 📝 Direct text input
+# تشغيل الخادم
+ollama serve
 
-### 3. Search Maliki Fiqh Topics
-
-The RAG system finds relevant content even if you don't use exact keywords:
-
-**Query:** "Can I wipe my socks?"
-**Finds:** "Maliki Rulings on Wiping Over Socks (Masah ala al-Khuffayn)"
-
-**Query:** "ما حكم الجمع بين الصلاتين؟"
-**Finds:** "Maliki Position on Combining Prayers"
-
-### 4. Get Prayer Times Automatically
-
-- 📍 Auto-detects your location
-- 🕌 Shows 5 daily prayer times
-- 🧭 Qibla direction finder
-- 📅 Islamic calendar (Hijri/Gregorian)
-- 🤲 99 Names of Allah
-
----
-
-## 📸 Screenshots
-
-### 1. Welcome Screen with Quick Actions
-
-![Al-Muwatta Welcome Interface](screenshots/04-welcome-with-quick-actions.png)
-
-**🌟 The Perfect First Impression**
-
-**Interface Elements:**
-- ✨ **Al-Muwatta (الموطأ)** branding with Islamic green theme
-- 🕌 **Prayer Times Widget** - Live times (Fajr 5:19 AM, Dhuhr 12:05 PM, Asr 3:23 PM, Maghrib 5:48 PM, Isha 6:50 PM)
-- 📍 **Auto-location detection** - Shows "Makkah, Saudi Arabia"
-- 🎯 **4 Colorful Quick Action Buttons**:
-  - 📖 Surah Al-Fatiha (Emerald-teal gradient)
-  - ✨ Daily Reminder (Purple-pink gradient)
-  - 🔍 Search Hadith (Blue-cyan gradient)
-  - 🤲 99 Names (Rose-orange gradient)
-- 💡 **Tips Section** with usage guidance
-- 📅 **Today's Date** - Sunday, October 26, 2025
-- 🧭 **Find Qibla Direction** link
-
-**Design Highlights:**
-- Modern glass-morphism effects
-- Islamic color palette (#006B3F green, #008B8B teal)
-- Smooth gradient transitions
-- Clean, spacious layout
-
----
-
-### 2. Bilingual Welcome Message - Arabic First
-
-![Al-Muwatta Initial Welcome](screenshots/01-welcome-page.png)
-
-**🗣️ Intelligent Bilingual Greeting**
-
-The AI welcomes users with:
-- 🌙 **"السلام عليكم ورحمة الله وبركاته"**
-- 📚 **"مرحباً بك في الموطأ - Al-Muwatta!"**
-- 🕌 **"مساعدك الذكي المتخصص في الفقه المالكي"**
-
-**What the assistant offers:**
-- الفقه المالكي من مصادر أصيلة (الرسالة، مختصر خليل)
-- آيات القرآن والتفسير
-- البحث في الأحاديث  
-- أوقات الصلاة والتقويم الهجري
-- أسئلة فقهية وإسلامية
-
-**Knowledge Base Stats:**
-- 📚 قاعدة معرفة: **21+ كتاب** في الفقه المالكي
-- 🤖 مدعوم بالذكاء الاصطناعي
-
-**Why This Matters:**
-- Arabic-first approach respects users
-- Sets expectation for Maliki specialization
-- Shows RAG database size
-- Establishes bilingual capability
-
----
-
-### 3. RAG in Action - Maliki Hand Placement Ruling
-
-![Maliki Fiqh Answer with Citations](screenshots/02-arabic-chat-maliki-hand-placement.png)
-
-**🎯 RAG-Enhanced Response with Authentic Sources**
-
-**User Question (Arabic):**
-*"ما هو حكم وضع اليدين في الصلاة عند المالكية؟"*  
-(What is the ruling on hand placement in prayer according to Malikis?)
-
-**AI Response Analysis:**
-- ✅ **Perfect RTL (Right-to-Left)** - Proper Arabic text flow
-- ✅ **Source Citation** - "Prayer (Salah) Specific Rulings in Maliki Madhab [Source 1]"
-- ✅ **Structured Answer** with clear sections:
-  - حكم وضع اليدين في الصلاة عند المالكية (The ruling)
-  - الرأي المالكي (Maliki position clearly stated)
-  - الأدلة من المصادر الإسلامية (Evidence from sources)
-- ✅ **Maliki Position**: Arms at sides (not folded) - distinctive Maliki practice
-- ✅ **Beautiful Typography** - Amiri font, 1.8 line-height
-
-**Technical Achievement:**
-- Qdrant searched 21 documents semantically
-- Found most relevant Maliki text (score > 0.8)
-- Gemini generated answer using RAG context
-- Response formatted with RTL markdown
-
----
-
-### 4. Complex Islamic Question - Honoring Parents
-
-![Arabic Conversation - Parents Virtue](screenshots/03-arabic-conversation-parents.png)
-
-**🤲 Deep Islamic Knowledge with Multiple Sources**
-
-**User Question (Arabic):**
-*"ما هي أحاديث فضل الوالدين؟"*  
-(What are the hadiths about honoring parents?)
-
-**Comprehensive AI Response:**
-- 📖 **Quranic Evidence**:
-  - Surah Al-Isra (17:23) - Complete verse quoted
-  - Surah Luqman (31:14) - Mother's sacrifice mentioned
-- 📚 **Hadith Evidence**:
-  - حديث عبد الله بن مسعود (Abdullah ibn Mas'ud)
-  - Multiple authentic narrations
-- 🎓 **Structured Sections**:
-  1. أدلة من القرآن الكريم
-  2. أحاديث نبوية في فضل الوالدين
-- ✅ **Natural Arabic** - Flows like a scholar speaking
-- ✅ **Proper Attribution** - Hadith sources named
-
-**What This Shows:**
-- AI combines Quran + Hadith seamlessly
-- Provides comprehensive Islamic guidance
-- Uses authentic sources
-- Beautiful Arabic presentation
-- Perfect RTL alignment
-
----
-
-## 🎨 UI/UX Features Demonstrated
-
-From the screenshots above, you can see our attention to detail:
-
-### Visual Design Excellence
-- ✅ **Islamic Color Palette** - Green (#006B3F), Teal (#008B8B), Gold (#D4AF37)
-- ✅ **Glass-morphism Effects** - Modern translucent cards
-- ✅ **Gradient Buttons** - Beautiful quick actions with smooth color transitions
-- ✅ **Amiri Font** - Professional Arabic typography (1.1em, line-height 1.8)
-- ✅ **Responsive Layout** - Prayer widget in sidebar, collapsible on mobile
-
-### RTL (Right-to-Left) Support
-- ✅ **Automatic Detection** - Switches to RTL for Arabic content
-- ✅ **Proper Text Flow** - All text aligned right for Arabic
-- ✅ **Markdown RTL** - Headers, lists, quotes properly reversed
-- ✅ **Bidirectional** - Mixed Arabic/English handled correctly
-
-### Interactive Elements
-- ✅ **Upload Button** (📤) - Bottom-left corner, always accessible
-- ✅ **Quick Actions** - One-click queries with visual feedback
-- ✅ **Prayer Times** - Auto-updates based on location
-- ✅ **Dark Mode Toggle** - Theme switcher (🌙/☀️)
-
-### Smart Features Shown
-- ✅ **Source Citations** - RAG sources shown inline with [Source 1] tags
-- ✅ **Timestamps** - Every message timestamped
-- ✅ **Auto-scroll** - Messages auto-scroll to bottom
-- ✅ **Loading States** - Animated dots while AI thinks
-- ✅ **Error Handling** - Graceful fallbacks if API fails
-
----
-
-## 🏛️ Architecture
-
-### Backend Structure
-
-```
-src/
-├── api_clients/           # External API integrations
-│   ├── base_client.py     # Base HTTP client with retry logic
-│   ├── hadith_client.py   # Hadith collections API
-│   ├── quran_client.py    # Quran verses & translations
-│   └── prayer_times_client.py  # Prayer times & calendar
-│
-├── services/              # Business logic
-│   ├── gemini_service.py  # Google Gemini AI integration
-│   ├── rag_service.py     # Qdrant RAG system
-│   ├── fiqh_scraper.py    # Web scraping for Maliki texts
-│   └── ocr_service.py     # OCR processing (DeepSeek-OCR)
-│
-├── routers/               # API endpoints
-│   ├── ai_router.py       # AI Q&A endpoints
-│   ├── quran_router.py    # Quran endpoints
-│   ├── hadith_router.py   # Hadith endpoints
-│   ├── prayer_times_router.py  # Prayer times
-│   └── upload_router.py   # File upload & knowledge base
-│
-├── models/                # Pydantic schemas
-│   └── schemas.py         # Request/response models
-│
-├── config.py              # Configuration management
-└── main.py                # FastAPI application
-```
-
-### Frontend Structure
-
-```
-frontend/src/
-├── components/
-│   ├── ChatMessage.tsx    # Message component (RTL/LTR aware)
-│   ├── PrayerTimesWidget.tsx  # Prayer times display
-│   ├── QuickActions.tsx   # Quick query buttons
-│   └── UploadButton.tsx   # File upload interface
-│
-├── lib/
-│   ├── api.ts             # API client functions
-│   ├── utils.ts           # Utility functions
-│   └── language-detector.ts  # Auto language detection
-│
-├── App.tsx                # Main application
-├── index.css              # Tailwind + custom styles
-└── main.tsx               # Entry point
+# اختبار
+python test_ollama.py
 ```
 
 ---
 
-## 📡 API Documentation
+## API Documentation
 
 ### Base URL
 
@@ -613,9 +392,8 @@ http://localhost:8000
 
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI Spec**: http://localhost:8000/openapi.json
 
-### Key Endpoints
+### Core Endpoints
 
 #### AI Assistant
 
@@ -625,16 +403,15 @@ Content-Type: application/json
 
 {
   "question": "What are the pillars of Islam?",
-  "language": "english",
-  "include_sources": true
+  "language": "english"
 }
 ```
 
-#### Quran
+#### Quran Access
 
 ```http
 GET /api/v1/quran/surahs/1?edition=en.sahih
-GET /api/v1/quran/ayahs/2:255?explain=true
+GET /api/v1/quran/ayahs/2:255
 GET /api/v1/quran/search?query=patience
 ```
 
@@ -642,359 +419,257 @@ GET /api/v1/quran/search?query=patience
 
 ```http
 GET /api/v1/prayer-times/timings?latitude=21.3891&longitude=39.8579
-GET /api/v1/prayer-times/timings/city?city=Dubai&country=UAE
+GET /api/v1/prayer-times/timings/city?city=Cairo&country=Egypt
 GET /api/v1/prayer-times/qibla?latitude=40.7128&longitude=-74.0060
 ```
 
-#### Knowledge Base Upload
+#### Knowledge Base Management
 
 ```http
 POST /api/v1/upload/book-pdf
-Content-Type: multipart/form-data
-
-file: [PDF file]
-title: "Mukhtasar Khalil"
-category: "fiqh"
-add_to_knowledge_base: true
+POST /api/v1/upload/book-image
+GET /api/v1/upload/knowledge-base/stats
 ```
 
-#### Knowledge Base Stats
+#### Provider Settings
 
 ```http
-GET /api/v1/upload/knowledge-base/stats
-
-Response:
-{
-  "status": "ready",
-  "total_documents": 21,
-  "vector_database": "Qdrant",
-  "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2",
-  "embedding_dimension": 384
-}
+GET /api/v1/settings/providers
+POST /api/v1/settings/providers/{provider}/models
+POST /api/v1/settings/test-connection
 ```
 
 ---
 
-## 🔍 RAG System (Maliki Fiqh)
+## Development
 
-### How It Works
+### Project Structure
 
-1. **User asks a question** (Arabic or English)
-2. **Semantic search** in Qdrant vector database
-3. **Top 3 relevant** Maliki fiqh documents retrieved
-4. **Context injection** into Gemini prompt
-5. **AI generates answer** using authentic sources
-6. **Response cites sources** (Al-Risala, Mukhtasar Khalil, etc.)
-
-### Vector Database Details
-
-- **Engine**: Qdrant (Rust-based, ultra-fast)
-- **Collection**: `maliki_fiqh`
-- **Vectors**: 384-dimensional embeddings
-- **Distance**: Cosine similarity
-- **Model**: `paraphrase-multilingual-MiniLM-L12-v2`
-- **Languages**: Arabic, English, 50+ others
-
-### Current Knowledge Base
-
-**21+ Documents Covering:**
-
-| Category | Topics |
-|----------|--------|
-| **Taharah** | Wudu, Ghusl, Tayammum, Menstruation, Najasah |
-| **Salah** | Daily prayers, Hand placement, Jumu'ah, Eid, Janazah |
-| **Sawm** | Ramadan, Breaking fast, Fidyah, Kaffara |
-| **Zakat** | Nisab, Rates, Recipients, Livestock, Agriculture |
-| **Hajj** | Pilgrimage, Udhiyah (sacrifice) |
-| **Muamalat** | Business, Trade, Riba, Contracts |
-| **Family** | Marriage, Wali, Mahr, Divorce |
-
-### Expanding the Knowledge Base
-
-**Method 1: Upload via UI**
-- Click upload button → Choose file → Auto-added
-
-**Method 2: Run Scraper**
-```bash
-python scrape_and_populate_rag.py
+```
+al-muwatta-ai/
+├── src/                          # Backend source
+│   ├── api_clients/              # External API integrations
+│   ├── routers/                  # API endpoints
+│   ├── services/                 # Business logic
+│   │   ├── gemini_service.py     # Gemini integration
+│   │   ├── ollama_service.py     # Ollama integration
+│   │   ├── multi_llm_service.py  # Multi-provider handler
+│   │   ├── rag_service.py        # RAG implementation
+│   │   └── ocr_service.py        # OCR processing
+│   ├── models/                   # Pydantic schemas
+│   ├── utils/                    # Utilities
+│   ├── config.py                 # Configuration
+│   └── main.py                   # FastAPI application
+├── frontend/                     # Frontend source
+│   ├── src/
+│   │   ├── components/           # React components
+│   │   ├── lib/                  # Utilities and API client
+│   │   └── App.tsx               # Main application
+├── tests/                        # Test suite
+├── scrapers/                     # Web scraping tools
+├── qdrant_db/                    # Vector database storage
+└── docs/                         # Documentation
 ```
 
-**Method 3: API**
-```bash
-curl -X POST http://localhost:8000/api/v1/upload/text-directly \
-  -F "title=New Topic" \
-  -F "text=Your Maliki fiqh content..."
-```
-
----
-
-## 🧪 Testing
-
-### Run All Tests
+### Running Tests
 
 ```bash
-# Activate venv
+# Backend tests
 source venv/bin/activate
+pytest tests/ -v --cov=src
 
-# Run test suite
-pytest tests/ -v
-
-# With coverage
+# Coverage report
 pytest tests/ --cov=src --cov-report=html
-
-# Test specific module
-pytest tests/test_quran_client.py -v
 ```
 
-### Test Coverage
+### Adding Maliki Content
 
-- ✅ Quran API Client (15+ tests)
-- ✅ Prayer Times API Client (15+ tests)
-- ✅ Hadith API Client (15+ tests)
-- ✅ Gemini Service (5+ tests)
-- ✅ Integration tests
+**Method 1: Direct Upload via UI**
+1. Access application at localhost:5173
+2. Use upload button to submit PDF or images
+3. System extracts text and adds to vector database
 
-### Example Test Run
+**Method 2: Programmatic Addition**
+
+```python
+from src.services.rag_service import MalikiFiqhRAG
+
+rag = MalikiFiqhRAG()
+rag.add_document(
+    text="Your Maliki fiqh content here...",
+    metadata={
+        "topic": "Topic Name",
+        "category": "salah",  # or zakat, sawm, etc.
+        "source": "Book Name",
+        "references": "Al-Risala, Mukhtasar Khalil",
+    }
+)
+```
+
+---
+
+## Deployment
+
+### Production Backend
 
 ```bash
-python example_usage.py
+# Install production server
+pip install gunicorn
+
+# Run with Gunicorn
+gunicorn src.main:app \
+  -w 4 \
+  -k uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000
 ```
 
-Expected output:
+### Production Frontend
+
+```bash
+cd frontend
+npm run build
+npx serve -s dist -l 3000
 ```
-✅ Quran API: Al-Fatiha retrieved (7 verses)
-✅ Prayer Times: Makkah times fetched
-✅ Gemini AI: Question answered
-✅ RAG Search: Found relevant Maliki content
+
+### Docker (Coming Soon)
+
+```bash
+docker-compose up -d
 ```
 
 ---
 
-## 🌍 Internationalization
+## Data Sources
 
-### Supported Languages
+### Primary Maliki Texts
 
-| Language | Support Level | Features |
-|----------|---------------|----------|
-| **Arabic** | ⭐⭐⭐⭐⭐ | RTL, dialect matching, Amiri font |
-| **English** | ⭐⭐⭐⭐⭐ | Full support |
-| **Urdu** | ⭐⭐⭐⭐ | Via multilingual model |
-| **Malay** | ⭐⭐⭐ | Via multilingual model |
-| **Turkish** | ⭐⭐⭐ | Via multilingual model |
+**Current knowledge base includes:**
+- Al-Risala - Ibn Abi Zayd al-Qayrawani
+- Mukhtasar Khalil - Khalil ibn Ishaq
+- Al-Mudawwana - Imam Malik and students
+- Al-Muwatta - Imam Malik ibn Anas
+- Bidayat al-Mujtahid - Ibn Rushd
 
-### Arabic Dialect Support
+### API Providers
 
-- ✅ Modern Standard Arabic (الفصحى)
-- ✅ Egyptian (المصري)
-- ✅ Levantine (الشامي)
-- ✅ Gulf (الخليجي)
-- ✅ Moroccan (المغربي)
-- ✅ Algerian & Tunisian
-
-The AI **automatically matches** your dialect style!
+| API | Endpoint | Documentation |
+|-----|----------|---------------|
+| Quran | api.alquran.cloud | https://alquran.cloud/api |
+| Prayer Times | api.aladhan.com | https://aladhan.com/prayer-times-api |
+| Hadith | api.sunnah.com | https://sunnah.api-docs.io |
 
 ---
 
-## 📊 Performance
+## Performance Metrics
 
-### Response Times
+| Operation | Latency | Notes |
+|-----------|---------|-------|
+| Vector Search | <200ms | Local Qdrant |
+| LLM Response | 2-5s | Varies by provider |
+| Quran API | <1s | Cached by provider |
+| Prayer Times | <1s | Global CDN |
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| **Quran API** | < 1s | Cached by provider |
-| **Prayer Times** | < 1s | Global CDN |
-| **RAG Search** | < 200ms | Qdrant local |
-| **Gemini Response** | 2-5s | Depends on prompt length |
-| **PDF Processing** | 5-30s | Depends on page count |
-
-### Scalability
-
-- **Concurrent Users**: 100+ (with FastAPI async)
-- **Vector Search**: Sub-second for 1M+ documents
-- **Database**: Qdrant scales horizontally
-- **Caching**: Redis-ready (optional)
+**Scalability:**
+- Concurrent users: 100+ (FastAPI async)
+- Vector search: Sub-second for 1M+ documents
+- Database: Qdrant horizontal scaling supported
 
 ---
 
-## 🔐 Security & Privacy
+## Security
 
-### API Keys
+### API Key Management
 
-- ✅ Environment variables (not in code)
-- ✅ `.env` file (git-ignored)
-- ✅ `.env.example` provided
+All sensitive credentials stored in `.env` file:
+- File is gitignored
+- Never committed to repository
+- Environment-specific configuration
 
 ### Data Privacy
 
-- ✅ **No user data stored** by default
-- ✅ Chat history: Client-side only
-- ✅ Uploaded files: Local storage
-- ✅ External APIs: Respect their terms
-
-### CORS
-
-Configured for development:
-```python
-allow_origins=["http://localhost:5173", "*"]
-```
-
-**For production**, restrict to your domain.
+- No user data stored by default
+- Chat history: Client-side localStorage only
+- Uploaded files: Local storage
+- External APIs: Subject to their terms
 
 ---
 
-## 🛣️ Roadmap
-
-### Phase 1: Core Features ✅ (COMPLETED)
-- [x] Quran API integration
-- [x] Prayer Times API
-- [x] Google Gemini AI
-- [x] Beautiful React UI
-- [x] Arabic RTL support
-
-### Phase 2: RAG System ✅ (COMPLETED)
-- [x] Qdrant vector database
-- [x] Maliki fiqh knowledge base (21+ docs)
-- [x] Semantic search
-- [x] Source citations
-- [x] File upload (Image/PDF)
-
-### Phase 3: Advanced Features 🚧 (IN PROGRESS)
-- [ ] Real web scraping (Scrapy spiders active)
-- [ ] DeepSeek-OCR GPU implementation
-- [ ] User authentication
-- [ ] Bookmark favorite answers
-- [ ] Share conversations
-
-### Phase 4: Scale & Deploy 📋 (PLANNED)
-- [ ] Docker containers
-- [ ] Redis caching
-- [ ] PostgreSQL for user data
-- [ ] Cloud deployment (AWS/GCP)
-- [ ] Mobile app (React Native)
-- [ ] Multi-madhab support (Shafi'i, Hanafi, Hanbali)
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the Muslim tech community!
+## Contributing
 
 ### How to Contribute
 
-1. **Add Maliki Fiqh Content**
-   - Upload books via the UI
-   - Run scrapers to collect content
-   - Submit curated text via API
+**Code Contributions:**
+1. Fork repository
+2. Create feature branch
+3. Implement changes with tests
+4. Submit pull request
 
-2. **Improve Code**
-   - Fork the repository
-   - Create feature branch
-   - Submit pull request
+**Content Contributions:**
+- Upload Maliki fiqh texts via UI
+- Submit authenticated content via API
+- Verify sources before submission
 
-3. **Report Issues**
-   - Use GitHub Issues
-   - Provide screenshots
-   - Include error logs
+**Guidelines:**
+- Follow PEP 8 (Python), ESLint (TypeScript)
+- Add tests for new features
+- Update documentation
+- Verify Islamic authenticity of content
 
-### Contribution Guidelines
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
-- **Code Style**: Follow PEP 8 (Python), ESLint (TypeScript)
-- **Tests**: Add tests for new features
-- **Documentation**: Update README for new features
-- **Islamic Authenticity**: Verify sources before adding
+### المساهمة (عربي)
 
----
+**كيفية المساهمة:**
+- إضافة محتوى فقهي مالكي موثق
+- تحسين الكود البرمجي
+- الإبلاغ عن المشاكل
+- ترجمة الوثائق
 
-## 📚 Data Sources
-
-### Primary APIs
-
-| Source | Purpose | License | Status |
-|--------|---------|---------|--------|
-| [alquran.cloud](https://alquran.cloud/api) | Quran verses & translations | Free | ✅ Active |
-| [aladhan.com](https://aladhan.com/prayer-times-api) | Prayer times & calendar | Free | ✅ Active |
-| [sunnah.com](https://sunnah.api-docs.io/) | Hadith collections | Requires key | ⚠️ Auth needed |
-
-### Maliki Fiqh Sources
-
-- **Al-Risala** - Ibn Abi Zayd al-Qayrawani
-- **Mukhtasar Khalil** - Khalil ibn Ishaq
-- **Al-Mudawwana** - Imam Malik & students
-- **Al-Muwatta** - Imam Malik ibn Anas
-- **Bidayat al-Mujtahid** - Ibn Rushd (comparative)
-
-### Referenced Websites
-
-- [malikifiqhqa.com](https://malikifiqhqa.com) - English Maliki resources
-- [australianislamiclibrary.org](https://www.australianislamiclibrary.org/maliki-fiqh---arabic-books.html) - Arabic Maliki books
-- IslamQA - Verified Islamic Q&A
+انظر [CONTRIBUTING.md](CONTRIBUTING.md) للتفاصيل.
 
 ---
 
-## 🔧 Configuration
+## Roadmap
 
-### Environment Variables
+### Completed
+- [x] Core platform with FastAPI + React
+- [x] Maliki fiqh RAG system (21+ documents)
+- [x] Multi-provider LLM support
+- [x] Arabic RTL interface
+- [x] Question classification
+- [x] File upload and OCR
+- [x] Session persistence
 
-Create `.env` file:
+### In Progress
+- [ ] User authentication
+- [ ] Advanced analytics
+- [ ] Mobile application
 
-```bash
-# Google Gemini API
-GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-2.0-flash-exp
-
-# Application
-APP_NAME="Al-Muwatta - الموطأ | Maliki Fiqh Assistant"
-DEBUG=True
-LOG_LEVEL=INFO
-
-# Database
-DATABASE_URL=sqlite:///./nur_al_ilm.db
-
-# Optional: Redis for caching
-REDIS_URL=redis://localhost:6379/0
-```
-
-### Customization
-
-**Change AI Model:**
-```python
-# src/config.py
-gemini_model: str = "gemini-2.0-flash-exp"  # or gemini-pro, gemini-1.5-pro
-```
-
-**Add More Madhabs:**
-```python
-# Extend src/services/rag_service.py
-# Create collections for Shafi'i, Hanafi, Hanbali
-```
-
-**Adjust RAG Parameters:**
-```python
-# src/services/rag_service.py
-n_results=3,  # Number of sources to retrieve
-score_threshold=0.3,  # Minimum similarity score
-max_context_length=2000,  # Max context characters
-```
+### Planned
+- [ ] Multi-madhab support (Shafi'i, Hanafi, Hanbali)
+- [ ] Voice input/output
+- [ ] Advanced caching layer
+- [ ] Docker deployment
+- [ ] Cloud hosting
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### Backend Won't Start
+### Backend Issues
 
 ```bash
 # Check logs
 tail -f logs/backend_stable.log
 
-# Test imports
-source venv/bin/activate
-python -c "from src.main import app; print('✅ OK')"
+# Verify imports
+python -c "from src.main import app; print('OK')"
 
 # Reinstall dependencies
 pip install --force-reinstall -r requirements.txt
 ```
 
-### Frontend Not Loading
+### Frontend Issues
 
 ```bash
 # Check logs
@@ -1004,138 +679,79 @@ tail -f logs/frontend.log
 cd frontend
 rm -rf node_modules/.vite dist
 npm install
-npm run dev
 ```
 
-### RAG Not Working
+### RAG Database
 
 ```bash
-# Reinitialize vector database
+# Reinitialize
 python initialize_rag.py
 
-# Check stats
+# Check status
 curl http://localhost:8000/api/v1/upload/knowledge-base/stats
 ```
 
-### Upload Button Not Showing
-
-- Make sure you're using latest frontend code
-- Upload popup appears at **bottom-left** of screen
-- Z-index is 100 (should be above everything)
-
 ---
 
-## 📖 Learn More
+## License
 
-### Islamic Resources
-
-- [Maliki Fiqh Made Simple](https://premium.malikimadhab.org)
-- [SeekersGuidance - Maliki Fiqh](https://seekersguidance.org/answers/maliki-fiqh/)
-- [Australian Islamic Library](https://www.australianislamiclibrary.org)
-
-### Technical Documentation
-
-- [FastAPI Docs](https://fastapi.tiangolo.com)
-- [Qdrant Documentation](https://qdrant.tech/documentation/)
-- [Sentence Transformers](https://www.sbert.net)
-- [Google Gemini API](https://ai.google.dev/docs)
-
----
-
-## 📜 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
 
 ### Third-Party Licenses
-
 - FastAPI: MIT
 - React: MIT
 - Qdrant: Apache 2.0
 - Sentence Transformers: Apache 2.0
-- Google Gemini: Google AI Terms
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-### Built With Love For
+### Islamic Scholarship
+- Imam Malik ibn Anas (founder of Maliki madhab)
+- Ibn Abi Zayd al-Qayrawani (Al-Risala)
+- Khalil ibn Ishaq (Mukhtasar Khalil)
+- Islamic scholars preserving knowledge
 
-**The Muslim Ummah** - الحمد لله رب العالمين
-
-### Special Thanks
-
-- **Google** - for Gemini API
-- **Qdrant** - for amazing vector database
-- **Hugging Face** - for transformer models
-- **Islamic Scholars** - for preserving and teaching Maliki fiqh
-- **Open Source Community** - for incredible tools
-
-### Maintainers
-
-- **Built by**: [@h9-tec](https://github.com/h9-tec)
-- **Repository**: [al-muwatta-ai](https://github.com/h9-tec/al-muwatta-ai)
-- **For questions**: Open an issue on GitHub
+### Technical Foundation
+- Google (Gemini API)
+- Qdrant (vector database)
+- Hugging Face (transformer models)
+- Open source community
 
 ---
 
-## 💬 Support
+## Contact
 
-### Need Help?
-
-- 🐛 **Issues**: [GitHub Issues](https://github.com/h9-tec/al-muwatta-ai/issues)
-- 💡 **Discussions**: [GitHub Discussions](https://github.com/h9-tec/al-muwatta-ai/discussions)
-- 📖 **Documentation**: See markdown files in repository
-- ⭐ **Star the repo**: https://github.com/h9-tec/al-muwatta-ai
-
-### Found a Bug?
-
-Please [open an issue](https://github.com/h9-tec/al-muwatta-ai/issues/new) with:
-1. **Description** of the bug
-2. **Steps to reproduce**
-3. **Expected vs actual** behavior
-4. **Screenshots** if applicable
-5. **Error logs** from `logs/` folder
+**Repository**: https://github.com/h9-tec/al-muwatta-ai  
+**Issues**: https://github.com/h9-tec/al-muwatta-ai/issues  
+**Discussions**: https://github.com/h9-tec/al-muwatta-ai/discussions  
+**Maintainer**: [@h9-tec](https://github.com/h9-tec)
 
 ---
 
-## 🌟 Star This Repository
+## Citation
 
-If you find **Al-Muwatta** useful, please give it a ⭐ on GitHub!
+If you use this project in research or production:
 
-**Repository**: https://github.com/h9-tec/al-muwatta-ai
-
-Every star helps others discover this unique Maliki fiqh platform! جزاك الله خيراً
-
----
-
-## 📞 Contact & Links
-
-- **GitHub Repository**: https://github.com/h9-tec/al-muwatta-ai
-- **Issues & Bugs**: https://github.com/h9-tec/al-muwatta-ai/issues
-- **Discussions**: https://github.com/h9-tec/al-muwatta-ai/discussions
-- **Maintainer**: [@h9-tec](https://github.com/h9-tec)
-
-### Want to Contribute?
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
-- Adding Maliki fiqh content
-- Improving code
-- Fixing bugs
-- Translating documentation
+```bibtex
+@software{almuwatta2025,
+  title = {Al-Muwatta: Maliki Fiqh Assistant with RAG},
+  author = {h9-tec},
+  year = {2025},
+  url = {https://github.com/h9-tec/al-muwatta-ai},
+  note = {Islamic knowledge platform specialized in Maliki jurisprudence}
+}
+```
 
 ---
 
 <div align="center">
 
-**Built with ❤️ for the Muslim Ummah**
+**Built for the Muslim Ummah**
 
 **الحمد لله رب العالمين**
 
 *"Indeed, in the remembrance of Allah do hearts find rest." (Quran 13:28)*
 
----
-
-Made with [FastAPI](https://fastapi.tiangolo.com/) • [React](https://react.dev/) • [Google Gemini](https://ai.google.dev/) • [Qdrant](https://qdrant.tech/)
-
 </div>
-
