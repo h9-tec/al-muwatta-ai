@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Al-Muwatta Welcome Screen](assets/04-welcome-with-quick-actions.png)
+![Al-Muwatta Welcome Screen](screenshots/04-welcome-with-quick-actions.png)
 
 **A Revolutionary AI-Powered Maliki Fiqh Platform**  
 *RAG-Enhanced Islamic Knowledge Assistant with 21+ Authentic Sources*
@@ -413,7 +413,7 @@ The RAG system finds relevant content even if you don't use exact keywords:
 
 ### 1. Welcome Screen with Quick Actions
 
-![Al-Muwatta Welcome Interface](assets/04-welcome-with-quick-actions.png)
+![Al-Muwatta Welcome Interface](screenshots/04-welcome-with-quick-actions.png)
 
 **🌟 The Perfect First Impression**
 
@@ -440,7 +440,7 @@ The RAG system finds relevant content even if you don't use exact keywords:
 
 ### 2. Bilingual Welcome Message - Arabic First
 
-![Al-Muwatta Initial Welcome](assets/01-welcome-page.png)
+![Al-Muwatta Initial Welcome](screenshots/01-welcome-page.png)
 
 **🗣️ Intelligent Bilingual Greeting**
 
@@ -470,7 +470,7 @@ The AI welcomes users with:
 
 ### 3. RAG in Action - Maliki Hand Placement Ruling
 
-![Maliki Fiqh Answer with Citations](assets/02-arabic-chat-maliki-hand-placement.png)
+![Maliki Fiqh Answer with Citations](screenshots/02-arabic-chat-maliki-hand-placement.png)
 
 **🎯 RAG-Enhanced Response with Authentic Sources**
 
@@ -498,7 +498,7 @@ The AI welcomes users with:
 
 ### 4. Complex Islamic Question - Honoring Parents
 
-![Arabic Conversation - Parents Virtue](assets/03-arabic-conversation-parents.png)
+![Arabic Conversation - Parents Virtue](screenshots/03-arabic-conversation-parents.png)
 
 **🤲 Deep Islamic Knowledge with Multiple Sources**
 

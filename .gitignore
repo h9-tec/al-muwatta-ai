@@ -116,9 +116,3 @@ models/
 # Documentation builds
 docs/_build/
 site/
-
-# Keep these folders
-!assets/
-!assets/**
-!screenshots/
-!screenshots/**
