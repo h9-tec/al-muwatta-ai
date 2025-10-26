@@ -1,43 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
-@import './styles/prophetic-theme.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', sans-serif;
-  direction: ltr;
-  font-size: var(--base-font-size, 16px);
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+  }
+
+  .arabic-text {
+    font-family: 'Amiri', serif;
+    text-align: right;
+    direction: rtl;
+  }
 }
 
-.arabic-text {
-  font-family: 'Amiri', serif;
-  text-align: right;
-  direction: rtl;
-}
-
-/* Centered Arabic variant for headings/slogans */
-.arabic-center {
-  font-family: 'Amiri', serif;
-  direction: rtl;
-  text-align: center;
-}
-
-.gradient-islamic {
-  background: linear-gradient(135deg, #006B3F 0%, #008B8B 100%);
-}
- 
-.glass-morphism {
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
- 
-.islamic-pattern {
-  background-image: 
-    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,107,63,.03) 35px, rgba(0,107,63,.03) 70px),
-    repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(0,139,139,.03) 35px, rgba(0,139,139,.03) 70px);
+@layer utilities {
+  .gradient-islamic {
+    background: linear-gradient(135deg, #006B3F 0%, #008B8B 100%);
+  }
+  
+  .glass-morphism {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .islamic-pattern {
+    background-image: 
+      repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,107,63,.03) 35px, rgba(0,107,63,.03) 70px),
+      repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(0,139,139,.03) 35px, rgba(0,139,139,.03) 70px);
+  }
 }
 
 /* Custom scrollbar */
@@ -241,38 +236,6 @@ body {
 /* Improve Arabic font rendering */
 .font-arabic {
   font-family: 'Amiri', 'Traditional Arabic', 'Arial', serif;
-  font-size: var(--arabic-font-size, 17.6px);
+  font-size: 1.1em;
   line-height: 1.8;
-}
-
-/* ----------------------------------------------------
-   Prophetic palette aliases (backward-compat for islamic-*)
-   ---------------------------------------------------- */
-.text-islamic-green { color: var(--paradise-green); }
-.bg-islamic-green { background-color: var(--paradise-green); }
-.border-islamic-green { border-color: var(--paradise-green); }
-
-.text-islamic-teal { color: var(--paradise-light); }
-.bg-islamic-teal { background-color: var(--paradise-light); }
-.border-islamic-teal { border-color: var(--paradise-light); }
-
-.text-islamic-gold { color: var(--madina-gold, #C59E37); }
-.border-islamic-gold { border-color: var(--madina-gold, #C59E37); }
-
-/* Tailwind gradient var compatibility for legacy classes */
-.from-islamic-green {
-  --tw-gradient-from: var(--paradise-green) var(--tw-gradient-from-position);
-  --tw-gradient-to: rgb(13 124 102 / 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-.to-islamic-teal {
-  --tw-gradient-to: var(--paradise-light) var(--tw-gradient-to-position);
-}
-
-/* Text gradient utility used in header */
-.text-gradient {
-  background: linear-gradient(135deg, var(--paradise-dark, #0A5C4F) 0%, var(--paradise-green) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }

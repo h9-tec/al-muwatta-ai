@@ -69,7 +69,7 @@ interface SuggestionsButtonProps {
 
 export function SuggestionsButton({ onSelect, disabled }: SuggestionsButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [closeTimeout, setCloseTimeout] = useState<number | null>(null);
 
   const handleMouseEnter = () => {
     if (closeTimeout) {
@@ -80,7 +80,7 @@ export function SuggestionsButton({ onSelect, disabled }: SuggestionsButtonProps
   };
 
   const handleMouseLeave = () => {
-    const timeout = setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       setIsOpen(false);
     }, 300); // 300ms delay before closing
     setCloseTimeout(timeout);

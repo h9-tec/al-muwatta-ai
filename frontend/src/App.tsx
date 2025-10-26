@@ -23,6 +23,33 @@ interface Message {
   timestamp: Date;
 }
 
+type StoredMessage = Omit<Message, 'timestamp'> & {
+  timestamp?: string | number | Date;
+};
+
+const parseStoredMessages = (raw: StoredMessage[] | null, fallback: Message[]): Message[] => {
+  if (!raw || !Array.isArray(raw)) return fallback;
+
+  return raw
+    .map((item) => {
+      const parsedTimestamp = (() => {
+        if (!item.timestamp) return new Date();
+        if (item.timestamp instanceof Date) return item.timestamp;
+        if (typeof item.timestamp === 'number') return new Date(item.timestamp);
+        const parsed = new Date(item.timestamp);
+        return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+      })();
+
+      return {
+        id: item.id ?? crypto.randomUUID(),
+        role: item.role === 'user' ? 'user' : 'assistant',
+        content: item.content ?? '',
+        timestamp: parsedTimestamp,
+      } satisfies Message;
+    })
+    .filter((message) => Boolean(message.content.trim()));
+};
+
 function App() {
   const initialMessage: Message = {
     id: '1',
@@ -33,8 +60,18 @@ function App() {
 
   // Load from localStorage on mount
   const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = localStorage.getItem('chat_messages');
-    return saved ? JSON.parse(saved) : [initialMessage];
+    try {
+      const saved = localStorage.getItem('chat_messages');
+      if (!saved) return [initialMessage];
+
+      const parsed = JSON.parse(saved) as StoredMessage[];
+      const hydrated = parseStoredMessages(parsed, [initialMessage]);
+      return hydrated.length ? hydrated : [initialMessage];
+    } catch (error) {
+      console.warn('Failed to parse stored messages, resetting.', error);
+      localStorage.removeItem('chat_messages');
+      return [initialMessage];
+    }
   });
   
   const [input, setInput] = useState('');
@@ -42,7 +79,8 @@ function App() {
   
   // Load dark mode from localStorage
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('dark_mode');
+    if (typeof window === 'undefined') return false;
+    const saved = window.localStorage.getItem('dark_mode');
     return saved === 'true';
   });
   
@@ -62,12 +100,19 @@ function App() {
 
   // Save messages to localStorage
   useEffect(() => {
-    localStorage.setItem('chat_messages', JSON.stringify(messages));
+    const serializable = messages.map((message) => ({
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      timestamp: message.timestamp.toISOString(),
+    } satisfies StoredMessage));
+
+    window.localStorage.setItem('chat_messages', JSON.stringify(serializable));
   }, [messages]);
 
   // Save dark mode to localStorage
   useEffect(() => {
-    localStorage.setItem('dark_mode', isDark.toString());
+    window.localStorage.setItem('dark_mode', isDark.toString());
   }, [isDark]);
 
   const handleSend = async (customPrompt?: string) => {
@@ -131,10 +176,10 @@ function App() {
   };
 
   const startNewChat = () => {
-    if (confirm('Start a new chat session? Current conversation will be saved.')) {
-      setMessages([initialMessage]);
-      localStorage.removeItem('chat_messages');
-    }
+    if (!window.confirm('Start a new chat session? Current conversation will be saved.')) return;
+
+    setMessages([initialMessage]);
+    window.localStorage.removeItem('chat_messages');
   };
 
   return (
@@ -198,16 +243,19 @@ function App() {
           <div className="flex-1 space-y-4">
             {/* Messages */}
             <div className={`rounded-2xl shadow-xl overflow-hidden ${isDark ? 'bg-gray-800/90 backdrop-blur-lg border border-gray-700' : 'glass-morphism'}`}>
-              <div className={`h-[calc(100vh-200px)] overflow-y-auto p-6 space-y-4 ${isDark ? 'bg-gray-900' : 'islamic-pattern'}`}>
+              <div
+                id="chat-container"
+                className={`h-[calc(100vh-200px)] overflow-y-auto p-6 space-y-4 ${isDark ? 'bg-gray-900' : 'bg-white/60 pattern-islamic'}`}
+              >
                 {messages.length === 1 && (
                   <div className="text-center py-8">
-                    <div className={`inline-block p-6 rounded-2xl mb-4 ${isDark ? 'bg-islamic-green/20' : 'bg-gradient-to-br from-islamic-green/10 to-islamic-teal/10'}`}>
+                    <div className={`inline-block p-6 rounded-2xl mb-4 ${isDark ? 'bg-paradise-500/20' : 'bg-gradient-to-br from-islamic-green to-islamic-teal/20'}`}>
                       <Sparkles size={48} className={`mx-auto ${isDark ? 'text-islamic-gold' : 'text-islamic-green'}`} />
                     </div>
                     <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gradient'}`}>
                       Ask me anything about Islam
                     </h2>
-                    <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>
+                    <p className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                       Get authentic answers from Quran, Hadith, and Islamic scholarship
                     </p>
                   </div>
@@ -287,7 +335,7 @@ function App() {
                     )}
                   </button>
                 </div>
-                <p className={`text-sm mt-2 text-center arabic-text font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-sm mt-2 arabic-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   لا إمام سوى مالك
                 </p>
               </div>
