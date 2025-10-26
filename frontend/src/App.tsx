@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Sparkles, Moon, Sun } from 'lucide-react';
+import { Send, Loader2, Sparkles, Moon, Sun, Plus } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { PrayerTimesWidget } from './components/PrayerTimesWidget';
-import { QuickActions } from './components/QuickActions';
+import { SuggestionsButton } from './components/SuggestionsButton';
 import { UploadButton } from './components/UploadButton';
 import { SettingsModal } from './components/SettingsModal';
 import { aiApi } from './lib/api';
@@ -18,17 +18,27 @@ interface Message {
 }
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "السلام عليكم ورحمة الله وبركاته\n\nمرحباً بك في الموطأ - Al-Muwatta!\nمساعدك الذكي المتخصص في الفقه المالكي 🕌\n\nأستطيع مساعدتك في:\n• الفقه المالكي من مصادر أصيلة (الرسالة، مختصر خليل)\n• آيات القرآن والتفسير\n• البحث في الأحاديث\n• أوقات الصلاة والتقويم الهجري\n• أسئلة فقهية وإسلامية\n\n📚 قاعدة معرفة: 21+ كتاب في الفقه المالكي\n🤖 مدعوم بالذكاء الاصطناعي\n\nكيف يمكنني خدمتك اليوم؟",
-      timestamp: new Date(),
-    },
-  ]);
+  const initialMessage: Message = {
+    id: '1',
+    role: 'assistant',
+    content: "السلام عليكم ورحمة الله وبركاته\n\nمرحباً بك في الموطأ - Al-Muwatta!\nمساعدك الذكي المتخصص في الفقه المالكي 🕌\n\nأستطيع مساعدتك في:\n• الفقه المالكي من مصادر أصيلة (الرسالة، مختصر خليل)\n• آيات القرآن والتفسير\n• البحث في الأحاديث\n• أوقات الصلاة والتقويم الهجري\n• أسئلة فقهية وإسلامية\n\n📚 قاعدة معرفة: 21+ كتاب في الفقه المالكي\n🤖 مدعوم بالذكاء الاصطناعي\n\nكيف يمكنني خدمتك اليوم؟",
+    timestamp: new Date(),
+  };
+
+  // Load from localStorage on mount
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem('chat_messages');
+    return saved ? JSON.parse(saved) : [initialMessage];
+  });
+  
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  
+  // Load dark mode from localStorage
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('dark_mode');
+    return saved === 'true';
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,6 +49,16 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Save messages to localStorage
+  useEffect(() => {
+    localStorage.setItem('chat_messages', JSON.stringify(messages));
+  }, [messages]);
+
+  // Save dark mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('dark_mode', isDark.toString());
+  }, [isDark]);
 
   const handleSend = async (customPrompt?: string) => {
     const messageText = customPrompt || input;
@@ -96,8 +116,15 @@ function App() {
     }
   };
 
-  const handleQuickAction = (prompt: string) => {
+  const handleSuggestion = (prompt: string) => {
     handleSend(prompt);
+  };
+
+  const startNewChat = () => {
+    if (confirm('Start a new chat session? Current conversation will be saved.')) {
+      setMessages([initialMessage]);
+      localStorage.removeItem('chat_messages');
+    }
   };
 
   return (
@@ -117,6 +144,16 @@ function App() {
             </div>
             
             <div className="flex items-center gap-2">
+              <button
+                onClick={startNewChat}
+                className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
+                  isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
+                }`}
+                title="New Chat"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">New Chat</span>
+              </button>
               <SettingsModal />
               <button
                 onClick={() => setIsDark(!isDark)}
@@ -179,16 +216,11 @@ function App() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Quick Actions */}
-              {messages.length === 1 && (
-                <div className="border-t border-gray-200 bg-white/50">
-                  <QuickActions onActionClick={handleQuickAction} />
-                </div>
-              )}
 
               {/* Input Area */}
               <div className={`border-t p-4 ${isDark ? 'border-gray-700 bg-gray-800/90' : 'border-gray-200 bg-white/80'}`}>
                 <div className="flex gap-3">
+                  <SuggestionsButton onSelect={handleSuggestion} disabled={loading} />
                   <UploadButton
                     onUploadComplete={(message) => {
                       const uploadMessage: Message = {

@@ -7,6 +7,25 @@ Only uses Maliki RAG for fiqh-related questions.
 from typing import Tuple
 
 
+def wants_sources(question: str) -> bool:
+    """
+    Check if user explicitly wants to see sources/citations.
+    
+    Args:
+        question: User's question
+        
+    Returns:
+        True if user wants sources
+    """
+    source_keywords = [
+        'source', 'sources', 'citation', 'reference', 'where from',
+        'من أين', 'مصدر', 'مصادر', 'مرجع', 'دليل', 'أدلة',
+        'show source', 'cite', 'proof', 'evidence',
+    ]
+    
+    return any(keyword in question.lower() for keyword in source_keywords)
+
+
 def is_fiqh_question(question: str) -> Tuple[bool, str]:
     """
     Determine if a question is about Islamic jurisprudence (fiqh).

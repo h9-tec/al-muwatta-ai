@@ -11,7 +11,7 @@ from loguru import logger
 
 from ..config import settings
 from .rag_service import MalikiFiqhRAG
-from ..utils.question_classifier import is_fiqh_question, get_response_instructions
+from ..utils.question_classifier import is_fiqh_question, get_response_instructions, wants_sources
 
 
 class GeminiService:
@@ -204,6 +204,7 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
 
         # Detect if this is a fiqh question
         is_fiqh, question_category = is_fiqh_question(question)
+        user_wants_sources = wants_sources(question)
         
         # Get relevant context from RAG ONLY if it's a fiqh question
         rag_context = ""
@@ -221,10 +222,15 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
         # Build prompt differently for fiqh vs non-fiqh questions
         if is_fiqh and rag_context:
             # For FIQH questions: Use RAG and Maliki specialization
+            if user_wants_sources:
+                citation_instruction = "IMPORTANT: Include source citations like [Source: Al-Risala] at the end of your answer."
+            else:
+                citation_instruction = "Do NOT show source citations or references in your answer. Use the sources for knowledge but hide the citations."
+            
             prompt = f"""
 {scholar_role}
 
-**Relevant Maliki fiqh sources for this question:**
+**Use these Maliki fiqh sources for your answer (but hide citations unless user asks):**
 
 {rag_context}
 
@@ -233,10 +239,11 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
 Provide answer {lang_instruction}:
 1. Direct answer based on Maliki madhab
 2. Evidence from Quran and Hadith
-3. Citation from Maliki sources (Al-Risala, Mukhtasar Khalil, etc.)
-4. Practical guidance if relevant
+3. Practical guidance if relevant
 
-Be accurate, respectful, cite sources, and respond in the same language/dialect style as the question.
+{citation_instruction}
+
+Be accurate, respectful, and respond in the same language/dialect style as the question.
 Use proper formatting with headings and bullet points.
 """
         else:
@@ -253,7 +260,8 @@ Provide answer {lang_instruction}:
 
 Be accurate, respectful, and respond in the same language/dialect style as the question.
 Use proper formatting with headings and bullet points.
-Do NOT mention specific madhabs or fiqh schools unless the question specifically asks about them.
+Do NOT mention Maliki madhab, fiqh schools, or jurisprudence unless specifically asked.
+Do NOT show source citations unless user explicitly requests them.
 """
             
             logger.info(f"ℹ️ Non-fiqh {question_category} question - using general Islamic knowledge")
