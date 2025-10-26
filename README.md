@@ -39,7 +39,16 @@
 
 ## 🌟 Overview
 
-**Al-Muwatta (الموطأ)** - named after Imam Malik's legendary hadith compilation - is a cutting-edge Islamic knowledge platform that combines authentic Islamic content APIs with Google Gemini AI and a specialized Retrieval-Augmented Generation (RAG) system focused on **Maliki Fiqh**.
+**Al-Muwatta (الموطأ)** - named after Imam Malik's legendary hadith compilation - is a cutting-edge Islamic knowledge platform that combines authentic Islamic content APIs with advanced AI (Gemini, Ollama, OpenRouter, Groq, OpenAI, Claude) and a specialized Retrieval-Augmented Generation (RAG) system focused on **Maliki Fiqh**.
+
+**Latest Updates:**
+- Multi-provider LLM support (6 providers)
+- Session persistence (chat history saved)
+- Smart question classification (fiqh vs non-fiqh)
+- Hidden citations (show only when requested)
+- Settings modal for provider/model selection
+- New chat session button
+- Professional suggestions dropdown
 
 ### Welcome Interface
 
@@ -69,10 +78,19 @@ The beautiful welcome screen features:
 
 ### 🤖 AI-Powered Islamic Assistant
 
-- **Google Gemini 2.0 Flash** - State-of-the-art LLM with Arabic expertise
+- **Multi-Provider LLM Support** - Choose from 6 providers:
+  - Ollama (local, free, private)
+  - OpenRouter (100+ models)
+  - Groq (super fast)
+  - OpenAI (GPT-4)
+  - Claude (Anthropic)
+  - Gemini (Google)
+- **Settings Modal** - Configure provider, API keys, and models via UI
 - **Automatic Language Detection** - Responds in user's language/dialect
 - **Dialect Matching** - Understands formal Arabic (فصحى) and colloquial (عامية)
-- **Context-Aware Responses** - Uses RAG to cite authentic Maliki sources
+- **Smart Question Classification** - Detects fiqh vs non-fiqh questions
+- **Context-Aware Responses** - Uses RAG for fiqh, general knowledge for others
+- **Hidden Citations** - Clean answers, sources shown only when requested
 
 ### 📚 Islamic Content APIs
 
@@ -106,6 +124,16 @@ The beautiful welcome screen features:
 - **PDF Upload** - Extract full books automatically
 - **DeepSeek-OCR Ready** - GPU-accelerated OCR (optional)
 - **Manual Text Entry** - Add content directly via API
+
+### 🆕 Latest Features
+
+- **Multi-Provider LLM** - Switch between Ollama, OpenRouter, Groq, OpenAI, Claude, Gemini
+- **Settings Modal** - Configure AI provider and model via UI
+- **Session Persistence** - Chat history and dark mode saved to localStorage
+- **New Chat Button** - Start fresh conversation anytime
+- **Suggestions Dropdown** - Hover to see expert-level query suggestions
+- **Smart AI** - Only mentions Maliki fiqh for actual fiqh questions
+- **Hidden Citations** - Clean responses, sources embedded (show on request)
 
 ### 🌍 Exceptional Arabic Support
 
@@ -248,8 +276,8 @@ Display with Source Citations
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/nur-al-ilm.git
-cd nur-al-ilm
+git clone https://github.com/h9-tec/al-muwatta-ai.git
+cd al-muwatta-ai
 
 # 2. Set up backend
 python3 -m venv venv
@@ -285,12 +313,12 @@ npm run dev &
 **Option 1: Manual Start**
 ```bash
 # Terminal 1 - Backend
-cd /path/to/nur-al-ilm
+cd /path/to/al-muwatta-ai
 source venv/bin/activate
 python run.py
 
 # Terminal 2 - Frontend
-cd /path/to/nur-al-ilm/frontend
+cd /path/to/al-muwatta-ai/frontend
 npm run dev
 ```
 
@@ -915,7 +943,7 @@ GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-2.0-flash-exp
 
 # Application
-APP_NAME="Nur Al-Ilm - Islamic Knowledge Assistant"
+APP_NAME="Al-Muwatta - الموطأ | Maliki Fiqh Assistant"
 DEBUG=True
 LOG_LEVEL=INFO
 
