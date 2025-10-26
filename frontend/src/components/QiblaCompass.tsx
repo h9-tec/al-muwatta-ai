@@ -68,11 +68,15 @@ export function QiblaCompass() {
     setStatus('requesting');
     prayerTimesApi
       .getQiblaDirection(lat, lng)
-      .then((response: { qibla?: QiblaResponse }) => {
-        const direction = response.qibla?.direction;
+      .then((response: { direction?: number; qibla?: QiblaResponse; source?: string }) => {
+        const direction = response.qibla?.direction ?? response.direction;
         if (typeof direction === 'number') {
           setQiblaDirection(direction);
-          setLocation(label || response.qibla?.location || `(${lat.toFixed(2)}, ${lng.toFixed(2)})`);
+          setLocation(
+            label ||
+              response.qibla?.location ||
+              `(${(response.qibla?.latitude ?? lat).toFixed(2)}, ${(response.qibla?.longitude ?? lng).toFixed(2)})`,
+          );
           setStatus('granted');
           setError('');
         } else {
@@ -130,9 +134,12 @@ export function QiblaCompass() {
     setStatus('requesting');
     try {
       const timings = await prayerTimesApi.getTimingsByCity(city, country);
-      const meta = timings?.timings?.meta || timings?.meta;
-      if (meta?.latitude && meta?.longitude) {
-        fetchQibla(meta.latitude, meta.longitude, `${city}, ${country}`);
+      const meta = timings?.timings?.meta || timings?.data?.meta || timings?.meta;
+      const latitude = meta?.latitude;
+      const longitude = meta?.longitude;
+
+      if (typeof latitude === 'number' && typeof longitude === 'number') {
+        fetchQibla(latitude, longitude, `${city}, ${country}`);
       } else {
         throw new Error('Location not found');
       }
