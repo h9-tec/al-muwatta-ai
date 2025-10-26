@@ -1,70 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles */
-body {
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #FDFCFA 0%, #F5F3F0 100%);
-  font-size: 16px;
-  direction: ltr;
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+  }
+
+  .arabic-text {
+    font-family: 'Amiri', serif;
+    text-align: right;
+    direction: rtl;
+  }
 }
 
-.arabic-text {
-  font-family: 'Amiri', serif;
-  text-align: right;
-  font-size: 17.6px;
-  direction: rtl;
-  letter-spacing: 0;
+@layer utilities {
+  .gradient-islamic {
+    background: linear-gradient(135deg, #006B3F 0%, #008B8B 100%);
+  }
+  
+  .glass-morphism {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .islamic-pattern {
+    background-image: 
+      repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,107,63,.03) 35px, rgba(0,107,63,.03) 70px),
+      repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(0,139,139,.03) 35px, rgba(0,139,139,.03) 70px);
+  }
 }
 
-/* Glass morphism */
-.glass-morphism {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(13, 124, 102, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-}
-
-/* Gradients */
-.gradient-islamic {
-  background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
-}
-
-.bg-gradient-paradise {
-  background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, #0D7C66 0%, #41B8A6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Islamic pattern */
-.islamic-pattern {
-  background-color: #FDFCFA;
-  background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(13, 124, 102, 0.015) 40px, rgba(13, 124, 102, 0.015) 80px);
-}
-
-/* Shadows */
-.shadow-prophetic-sm {
-  box-shadow: 0 2px 8px rgba(13, 124, 102, 0.08);
-}
-
-.shadow-prophetic {
-  box-shadow: 0 4px 16px rgba(13, 124, 102, 0.12);
-}
-
-.shadow-prophetic-lg {
-  box-shadow: 0 8px 32px rgba(13, 124, 102, 0.16);
-}
-
-/* Scrollbar */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -75,12 +46,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(13, 124, 102, 0.3);
+  background-color: rgba(0, 107, 63, 0.3);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(13, 124, 102, 0.5);
+  background-color: rgba(0, 107, 63, 0.5);
 }
 
 /* Animations */
@@ -101,7 +72,6 @@ body {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -113,7 +83,7 @@ body {
   animation: fadeIn 0.5s ease-out;
 }
 
-/* Markdown content */
+/* Markdown Content Styling */
 .markdown-content {
   color: #1f2937;
   line-height: 1.75;
@@ -123,7 +93,7 @@ body {
 .markdown-content h2,
 .markdown-content h3,
 .markdown-content h4 {
-  color: #0D7C66;
+  color: #006B3F;
   font-weight: 700;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
@@ -131,7 +101,7 @@ body {
 
 .markdown-content h1 {
   font-size: 1.5em;
-  border-bottom: 2px solid #41B8A6;
+  border-bottom: 2px solid #008B8B;
   padding-bottom: 0.3em;
 }
 
@@ -159,16 +129,16 @@ body {
 
 .markdown-content strong {
   font-weight: 700;
-  color: #0D7C66;
+  color: #006B3F;
 }
 
 .markdown-content em {
   font-style: italic;
-  color: #41B8A6;
+  color: #008B8B;
 }
 
 .markdown-content code {
-  background-color: rgba(13, 124, 102, 0.1);
+  background-color: rgba(0, 107, 63, 0.1);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-size: 0.9em;
@@ -189,7 +159,7 @@ body {
 }
 
 .markdown-content blockquote {
-  border-left: 4px solid #41B8A6;
+  border-left: 4px solid #008B8B;
   padding-left: 1em;
   margin-left: 0;
   margin-bottom: 1em;
@@ -198,12 +168,12 @@ body {
 }
 
 .markdown-content a {
-  color: #41B8A6;
+  color: #008B8B;
   text-decoration: underline;
 }
 
 .markdown-content a:hover {
-  color: #0D7C66;
+  color: #006B3F;
 }
 
 .markdown-content hr {
@@ -226,11 +196,11 @@ body {
 }
 
 .markdown-content th {
-  background-color: rgba(13, 124, 102, 0.1);
+  background-color: rgba(0, 107, 63, 0.1);
   font-weight: 700;
 }
 
-/* Arabic RTL Support */
+/* Arabic RTL Support for Markdown */
 .arabic-markdown {
   direction: rtl;
   text-align: right;
@@ -252,7 +222,7 @@ body {
 
 .arabic-markdown blockquote {
   border-left: none;
-  border-right: 4px solid #41B8A6;
+  border-right: 4px solid #008B8B;
   padding-right: 1em;
   padding-left: 0;
   margin-right: 0;
@@ -263,6 +233,7 @@ body {
   text-align: right;
 }
 
+/* Improve Arabic font rendering */
 .font-arabic {
   font-family: 'Amiri', 'Traditional Arabic', 'Arial', serif;
   font-size: 1.1em;
