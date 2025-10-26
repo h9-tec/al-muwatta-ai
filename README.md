@@ -43,7 +43,7 @@
 
 ### Welcome Interface
 
-![Welcome Page](screenshots/welcome-page.png)
+![Welcome Page](screenshots/01-welcome-page.png)
 
 The beautiful welcome screen features:
 - ✨ **Al-Muwatta branding** - الموطأ in elegant Arabic calligraphy
@@ -128,47 +128,6 @@ The beautiful welcome screen features:
 
 ## 📸 Screenshots
 
-### Main Chat Interface - Arabic Mode with RAG Citations
-
-![Arabic Chat with Maliki Fiqh Sources](screenshots/arabic-chat-rag.png)
-
-*The AI responding in perfect Arabic with Maliki fiqh sources cited*
-
-**Features Shown:**
-- ✅ RTL (right-to-left) layout for Arabic
-- ✅ Source citations (Al-Risala mentioned)
-- ✅ Beautiful Amiri font rendering
-- ✅ Structured markdown with headers
-- ✅ Prayer times widget (sidebar)
-
----
-
-### Maliki Fiqh Question with Detailed Sources
-
-![Maliki Fiqh Answer with Citations](screenshots/maliki-answer-sources.png)
-
-*AI providing Maliki-specific rulings with authentic source references*
-
-**Features Shown:**
-- ✅ Hand placement in prayer (Maliki position)
-- ✅ Source citation: "Prayer (Salah) Specific Rulings in Maliki Madhab [Source 1]"
-- ✅ Detailed explanation with bullet points
-- ✅ Clean markdown formatting
-
----
-
-### English Interface with Full Features
-
-![English Chat Interface](screenshots/english-interface.png)
-
-**Features Shown:**
-- ✅ Full-width chat area
-- ✅ Prayer times widget with live times
-- ✅ Quick action buttons
-- ✅ Tips section
-- ✅ Modern glass-morphism design
-
----
 
 ## 🏗️ Architecture
 
