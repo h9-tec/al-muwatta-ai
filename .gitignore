@@ -1,0 +1,124 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+qdrant_db/
+*.qdrant
+
+# Logs
+logs/
+*.log
+nohup.out
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/build/
+frontend/.next/
+frontend/out/
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/coverage/
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Uploads & Temp
+uploads/
+temp/
+tmp/
+*.tmp
+*.bak
+*.swp
+
+# Data & Scraped Content
+data/*.json
+data/*.csv
+scraped_data/
+raw_data/
+
+# Model Cache
+.cache/
+models/
+*.bin
+*.safetensors
+*.gguf
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Documentation builds
+docs/_build/
+site/
+
+# Keep these folders
+!assets/
+!assets/**
+!screenshots/
+!screenshots/**

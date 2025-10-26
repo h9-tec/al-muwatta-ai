@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+  }
+
+  .arabic-text {
+    font-family: 'Amiri', serif;
+    text-align: right;
+    direction: rtl;
+  }
+}
+
+@layer utilities {
+  .gradient-islamic {
+    background: linear-gradient(135deg, #006B3F 0%, #008B8B 100%);
+  }
+  
+  .glass-morphism {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .islamic-pattern {
+    background-image: 
+      repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,107,63,.03) 35px, rgba(0,107,63,.03) 70px),
+      repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(0,139,139,.03) 35px, rgba(0,139,139,.03) 70px);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 107, 63, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 107, 63, 0.5);
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Markdown Content Styling */
+.markdown-content {
+  color: #1f2937;
+  line-height: 1.75;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  color: #006B3F;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-content h1 {
+  font-size: 1.5em;
+  border-bottom: 2px solid #008B8B;
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.3em;
+}
+
+.markdown-content h3 {
+  font-size: 1.1em;
+}
+
+.markdown-content p {
+  margin-bottom: 1em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5em;
+}
+
+.markdown-content strong {
+  font-weight: 700;
+  color: #006B3F;
+}
+
+.markdown-content em {
+  font-style: italic;
+  color: #008B8B;
+}
+
+.markdown-content code {
+  background-color: rgba(0, 107, 63, 0.1);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: 'Courier New', monospace;
+}
+
+.markdown-content pre {
+  background-color: #f5f5f5;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #008B8B;
+  padding-left: 1em;
+  margin-left: 0;
+  margin-bottom: 1em;
+  color: #4b5563;
+  font-style: italic;
+}
+
+.markdown-content a {
+  color: #008B8B;
+  text-decoration: underline;
+}
+
+.markdown-content a:hover {
+  color: #006B3F;
+}
+
+.markdown-content hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 1.5em 0;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: rgba(0, 107, 63, 0.1);
+  font-weight: 700;
+}
+
+/* Arabic RTL Support for Markdown */
+.arabic-markdown {
+  direction: rtl;
+  text-align: right;
+}
+
+.arabic-markdown h1,
+.arabic-markdown h2,
+.arabic-markdown h3,
+.arabic-markdown h4 {
+  text-align: right;
+}
+
+.arabic-markdown ul,
+.arabic-markdown ol {
+  margin-right: 1.5em;
+  margin-left: 0;
+  text-align: right;
+}
+
+.arabic-markdown blockquote {
+  border-left: none;
+  border-right: 4px solid #008B8B;
+  padding-right: 1em;
+  padding-left: 0;
+  margin-right: 0;
+}
+
+.arabic-markdown table th,
+.arabic-markdown table td {
+  text-align: right;
+}
+
+/* Improve Arabic font rendering */
+.font-arabic {
+  font-family: 'Amiri', 'Traditional Arabic', 'Arial', serif;
+  font-size: 1.1em;
+  line-height: 1.8;
+}
