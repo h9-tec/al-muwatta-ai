@@ -10,6 +10,7 @@ interface ChatMessageProps {
   content: string;
   timestamp?: Date;
   question?: string;
+  metadata?: Record<string, unknown>;
 }
 
 // Detect if text is Arabic
@@ -19,7 +20,25 @@ const isArabicText = (text: string): boolean => {
   return arabicMatches ? arabicMatches.length > 10 : false;
 };
 
-export function ChatMessage({ id, role, content, timestamp, question }: ChatMessageProps) {
+const renderSources = (metadata?: Record<string, unknown>) => {
+  if (!metadata) return null;
+  const sources = metadata.sources as Array<{ type: string; content: string }> | undefined;
+  if (!sources || sources.length === 0) return null;
+
+  return (
+    <div className="mt-3 space-y-2 text-xs text-gray-600 border-t border-gray-200 pt-3">
+      <p className="font-semibold">Sources referenced:</p>
+      {sources.map((source, index) => (
+        <div key={index} className="bg-white/60 rounded-lg p-2">
+          <p className="uppercase tracking-wide text-[10px] text-gray-500 mb-1">{source.type}</p>
+          <pre className="whitespace-pre-wrap break-words text-gray-700">{source.content}</pre>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export function ChatMessage({ id, role, content, timestamp, question, metadata }: ChatMessageProps) {
   const isUser = role === 'user';
   const isArabic = isArabicText(content);
 
@@ -65,6 +84,7 @@ export function ChatMessage({ id, role, content, timestamp, question }: ChatMess
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {content}
               </ReactMarkdown>
+              {renderSources(metadata)}
             </div>
           )}
         </div>

@@ -234,7 +234,7 @@ async def search_quran(
             }
 
     async with QuranComAPIClient() as quran_com:
-        quran_com_results = await quran_com.get_chapters()
+        quran_com_results = await quran_com.search(query)
         return {
             "results": quran_com_results,
             "query": query,

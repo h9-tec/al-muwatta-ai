@@ -34,7 +34,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
     try:
         gemini = GeminiService()
 
-        answer = await gemini.answer_islamic_question(
+        answer, structured_sources = await gemini.answer_islamic_question(
             request.question,
             language=request.language,
         )
@@ -52,6 +52,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
             metadata={
                 "question": request.question,
                 "include_sources": request.include_sources,
+                "sources": structured_sources,
             },
         )
 

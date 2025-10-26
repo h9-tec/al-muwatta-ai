@@ -21,6 +21,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  metadata?: Record<string, unknown>;
 }
 
 type StoredMessage = Omit<Message, 'timestamp'> & {
@@ -144,6 +145,7 @@ function App() {
         role: 'assistant',
         content: response.content,
         timestamp: new Date(),
+        metadata: response.metadata,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);

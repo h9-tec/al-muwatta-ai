@@ -102,20 +102,27 @@ class MultiLLMService:
     async def _list_ollama_models(self) -> List[Dict[str, Any]]:
         """List locally installed Ollama models."""
         try:
-            import ollama
-            client = ollama.Client()
-            models_response = client.list()
-            
-            models = []
-            for model in models_response.get('models', []):
-                models.append({
-                    'id': model['name'],
-                    'name': model['name'],
-                    'size': model.get('size', 0),
-                    'provider': 'ollama',
-                    'local': True,
-                })
-            
+            async with httpx.AsyncClient(base_url=self.base_url) as client:
+                response = await client.get("/api/tags")
+                response.raise_for_status()
+                data = response.json()
+
+            models: List[Dict[str, Any]] = []
+            for model in data.get("models", []):
+                name = model.get("name") or model.get("model")
+                if not name:
+                    continue
+                models.append(
+                    {
+                        "id": name,
+                        "name": name,
+                        "provider": "ollama",
+                        "size": model.get("size"),
+                        "modified_at": model.get("modified_at"),
+                        "local": True,
+                    }
+                )
+
             return models
 
         except Exception as e:

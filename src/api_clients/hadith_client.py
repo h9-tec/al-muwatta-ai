@@ -207,9 +207,29 @@ class HadithAPIClient(BaseAPIClient):
                 endpoint = f"/collections/{collection_name}/hadiths/search"
 
             response = await self.get(endpoint, params=params, headers=self.sunnah_headers or None)
-            return response
+            if response.get("data"):
+                return response
         except Exception as e:
             logger.error(f"Failed to search Hadiths with query '{query}': {e}")
+
+        # Fallback to gading.dev API
+        try:
+            fallback_params = {"query": query, "limit": limit}
+            fallback_client = BaseAPIClient(base_url="https://api.hadith.gading.dev")
+            fallback_response = await fallback_client.get(
+                "/search",
+                params=fallback_params,
+            )
+            await fallback_client.close()
+            data = fallback_response.get("data", [])
+            return {
+                "data": data,
+                "total": len(data),
+                "page": page,
+                "limit": limit,
+            }
+        except Exception as fallback_error:
+            logger.error(f"Fallback hadith search failed: {fallback_error}")
             return {"data": [], "total": 0, "limit": limit, "page": page}
 
     async def get_random_hadith(self) -> Optional[Dict[str, Any]]:

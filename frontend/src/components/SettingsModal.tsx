@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings, X, Check, Loader2 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '../lib/api';
 
 interface Provider {
   name: string;
@@ -50,7 +50,7 @@ export function SettingsModal() {
 
   const fetchProviders = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/v1/settings/providers');
+      const response = await api.get('/api/v1/settings/providers');
       setProviders(response.data.providers);
     } catch (error) {
       console.error('Failed to fetch providers:', error);
@@ -60,8 +60,8 @@ export function SettingsModal() {
   const fetchModels = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(
-        `http://localhost:8000/api/v1/settings/providers/${selectedProvider}/models`,
+      const response = await api.post(
+        `/api/v1/settings/providers/${selectedProvider}/models`,
         { api_key: apiKey }
       );
       setModels(response.data.models);
@@ -70,7 +70,8 @@ export function SettingsModal() {
       }
     } catch (error) {
       console.error('Failed to fetch models:', error);
-      alert('Failed to fetch models. Check API key and connection.');
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to fetch models: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -79,8 +80,8 @@ export function SettingsModal() {
   const testConnection = async () => {
     setTesting(true);
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/v1/settings/test-connection',
+      const response = await api.post(
+        '/api/v1/settings/test-connection',
         {
           provider: selectedProvider,
           api_key: apiKey,

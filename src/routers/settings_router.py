@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from loguru import logger
 
 from ..services.multi_llm_service import MultiLLMService
+from ..config import settings
 
 router = APIRouter(prefix="/api/v1/settings", tags=["Settings"])
 
@@ -21,6 +22,10 @@ class ProviderConfig(BaseModel):
     model: Optional[str] = None
 
 
+class ProviderModelsRequest(BaseModel):
+    api_key: Optional[str] = None
+
+
 @router.get("/providers", summary="Get all available providers")
 async def get_providers() -> Dict[str, Any]:
     """
@@ -29,8 +34,12 @@ async def get_providers() -> Dict[str, Any]:
     Returns:
         Dictionary of providers with their details
     """
+    providers = MultiLLMService.PROVIDERS.copy()
+    if settings.use_local_llm:
+        providers.setdefault("ollama", {"name": "Ollama (Local)", "requires_api_key": False})
+
     return {
-        "providers": MultiLLMService.PROVIDERS,
+        "providers": providers,
         "current": "gemini",  # Default
     }
 
@@ -38,7 +47,7 @@ async def get_providers() -> Dict[str, Any]:
 @router.post("/providers/{provider}/models", summary="List models for provider")
 async def list_provider_models(
     provider: str,
-    api_key: str = Body(None, description="API key (if required)"),
+    payload: Optional[ProviderModelsRequest] = Body(default=None, description="Optional API key payload"),
 ) -> Dict[str, Any]:
     """
     Fetch all available models from a provider.
@@ -51,7 +60,7 @@ async def list_provider_models(
         List of available models
     """
     try:
-        service = MultiLLMService(provider=provider, api_key=api_key)
+        service = MultiLLMService(provider=provider, api_key=payload.api_key if payload else api_key)
         models = await service.list_available_models()
         
         return {

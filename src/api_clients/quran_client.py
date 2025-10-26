@@ -59,6 +59,14 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to fetch verse {verse_key} from quran.com: {exc}")
             return None
 
+    async def search(self, query: str, size: int = 5) -> Optional[Dict[str, Any]]:
+        try:
+            response = await self.get("/search", params={"q": query, "size": size})
+            return response
+        except Exception as exc:
+            logger.error(f"Failed to search Quran.com for '{query}': {exc}")
+            return None
+
     async def get_full_quran(
         self,
         edition: str = "quran-uthmani",
@@ -218,37 +226,15 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to get Ayah number {ayah_number}: {e}")
             return None
 
-    async def get_juz(
-        self,
-        juz_number: int,
-        edition: str = "quran-uthmani",
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Get a specific Juz (part) of the Quran.
-
-        Args:
-            juz_number: Juz number (1-30)
-            edition: Quran edition identifier
-
-        Returns:
-            Juz data with all ayahs or None if not found
-
-        Example:
-            >>> client = QuranAPIClient()
-            >>> juz = await client.get_juz(30)
-            >>> print(juz['surahs'])
-        """
+    async def get_juz(self, juz_number: int, language: str = "ar") -> Optional[Dict[str, Any]]:
         try:
-            if not 1 <= juz_number <= 30:
-                raise ValueError("Juz number must be between 1 and 30")
-
-            response = await self.get(f"/juz/{juz_number}/{edition}")
-            return response.get("data")
-        except ValueError as e:
-            logger.error(f"Invalid juz number: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Failed to get Juz {juz_number}: {e}")
+            response = await self.get(
+                f"/juzs/{juz_number}",
+                params={"language": language},
+            )
+            return response
+        except Exception as exc:
+            logger.error(f"Failed to fetch juz {juz_number} from quran.com: {exc}")
             return None
 
     async def get_page(
@@ -350,10 +336,18 @@ class QuranComAPIClient(BaseAPIClient):
                 params["surah"] = surah
 
             response = await self.get(f"/search/{query}/{edition}", params=params)
-            return response.get("data", {"matches": [], "count": 0})
+            data = response.get("data")
+            if data and data.get("matches"):
+                return data
+
+            if settings.quran_com_use_live_api:
+                async with QuranComAPIClient() as quran_com:
+                    fallback = await quran_com.search(query)
+                    if fallback:
+                        return fallback.get("search", {})
         except Exception as e:
             logger.error(f"Failed to search Quran with query '{query}': {e}")
-            return {"matches": [], "count": 0}
+        return {"matches": [], "count": 0}
 
     async def get_surah_with_multiple_editions(
         self,

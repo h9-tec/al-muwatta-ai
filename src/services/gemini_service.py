@@ -231,13 +231,20 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
 
         # Fetch Hadith support for non-fiqh questions
         hadith_context = await self._fetch_hadith_context(question, is_fiqh)
+
+        structured_sources = [
+            {"type": "quran", "content": quran_context},
+            {"type": "hadith", "content": hadith_context},
+            {"type": "fiqh", "content": rag_context},
+        ]
         
         # Get appropriate instructions based on question type
         scholar_role = get_response_instructions(is_fiqh, question_category, language)
 
         # Build prompt differently for fiqh vs non-fiqh questions
-        if is_fiqh and (rag_context or quran_context or hadith_context):
-            # For FIQH questions: Use RAG and Maliki specialization
+        sources_text = "\n".join(source["content"] for source in structured_sources if source["content"].strip())
+
+        if is_fiqh and sources_text:
             if user_wants_sources:
                 citation_instruction = "IMPORTANT: Include source citations like [Source: Al-Risala] at the end of your answer."
             else:
@@ -246,13 +253,9 @@ Match their tone - be natural, conversational, and authentic in Arabic."""
             prompt = f"""
 {scholar_role}
 
-**Use these Maliki fiqh sources for your answer (but hide citations unless user asks):**
+**Use these verified Maliki references for your answer (hide citations unless user asks):**
 
-{rag_context}
-
-{quran_context}
-
-{hadith_context}
+{sources_text}
 
 {question}
 
@@ -267,15 +270,12 @@ Be accurate, respectful, and respond in the same language/dialect style as the q
 Use proper formatting with headings and bullet points.
 """
         else:
-            # For NON-FIQH questions: General Islamic scholar (no madhab emphasis)
             prompt = f"""
 {scholar_role}
 
-**Authoritative sources gathered for you:**
+**Verified Quranic and Hadith sources retrieved for you:**
 
-{quran_context}
-
-{hadith_context}
+{sources_text}
 
 {question}
 
@@ -289,7 +289,7 @@ Use proper formatting with headings and bullet points.
 Do NOT mention Maliki madhab, fiqh schools, or jurisprudence unless specifically asked.
 Do NOT show source citations unless user explicitly requests them.
 """
-            
+
             logger.info(f"ℹ️ Non-fiqh {question_category} question - using general Islamic knowledge")
 
         return await self.generate_content(prompt, temperature=0.6, max_tokens=2500)
@@ -489,4 +489,57 @@ Note: This is educational guidance, not a definitive ruling.
 """
 
         return await self.generate_content(prompt, temperature=0.4, max_tokens=1000)
+
+    async def _fetch_quran_context(self, question: str) -> str:
+        """Fetch relevant Quranic verses for the user's question."""
+        try:
+            async with QuranAPIClient() as client:
+                search_results = await client.search_quran(question, edition="quran-uthmani")
+                matches = search_results.get("matches") if isinstance(search_results, dict) else None
+                if matches:
+                    contexts = []
+                    for match in matches[:3]:
+                        text = match.get("text", "")
+                        verse_key = match.get("verse_key")
+                        contexts.append(f"[Quran {verse_key}]\n{text}\n")
+                    return "\n".join(contexts)
+        except Exception as exc:
+            logger.warning(f"Quran Cloud search failed: {exc}")
+
+        try:
+            async with QuranComAPIClient() as quran_com:
+                response = await quran_com.search(question)
+                verses = response.get("search", {}).get("results", []) if isinstance(response, dict) else []
+                contexts = []
+                for verse in verses[:3]:
+                    verse_key = verse.get("verse_key")
+                    text = verse.get("text") or ""
+                    contexts.append(f"[Quran {verse_key}]\n{text}\n")
+                return "\n".join(contexts)
+        except Exception as exc:
+            logger.warning(f"Quran.com search failed: {exc}")
+        return ""
+
+    async def _fetch_hadith_context(self, question: str, is_fiqh: bool) -> str:
+        """Fetch supporting hadith narrations."""
+        if not question:
+            return ""
+
+        try:
+            async with HadithAPIClient() as client:
+                search_results = await client.search_hadith(query=question, limit=3)
+                data = search_results.get("data", []) if isinstance(search_results, dict) else []
+                contexts = []
+                for item in data[:3]:
+                    arabic_text = item.get("hadithArabic") or item.get("arab", "")
+                    translation = item.get("hadithEnglish") or item.get("id", "")
+                    collection = item.get("collection", {}).get("name", "")
+                    number = item.get("hadithNumber") or item.get("number")
+                    contexts.append(
+                        f"[Hadith {collection} #{number}]\n{arabic_text}\n{translation}\n"
+                    )
+                return "\n".join(contexts)
+        except Exception as exc:
+            logger.warning(f"Hadith search failed: {exc}")
+        return ""
 
