@@ -1,10 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Sparkles, Moon, Sun, Plus } from 'lucide-react';
+import { Send, Loader2, Sparkles, Moon, Sun, Plus, Bookmark } from 'lucide-react';
 import { ChatMessage } from './components/ChatMessage';
 import { PrayerTimesWidget } from './components/PrayerTimesWidget';
 import { SuggestionsButton } from './components/SuggestionsButton';
 import { UploadButton } from './components/UploadButton';
 import { SettingsModal } from './components/SettingsModal';
+import { QiblaCompass } from './components/QiblaCompass';
+import { TasbeehCounter } from './components/TasbeehCounter';
+import { HijriDate } from './components/HijriDate';
+import { ExportChat } from './components/ExportChat';
+import { BookmarksView } from './components/BookmarksView';
+import { FontSizeControl } from './components/FontSizeControl';
 import { aiApi } from './lib/api';
 import { detectLanguage, getLanguageInstruction } from './lib/language-detector';
 import { cn } from './lib/utils';
@@ -39,6 +45,10 @@ function App() {
     const saved = localStorage.getItem('dark_mode');
     return saved === 'true';
   });
+  
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chat' | 'qibla' | 'tasbeeh'>('chat');
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -154,7 +164,21 @@ function App() {
                 <Plus size={18} />
                 <span className="hidden sm:inline">New Chat</span>
               </button>
+              
+              <button
+                onClick={() => setShowBookmarks(true)}
+                className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium ${
+                  isDark ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
+                }`}
+                title="Bookmarks"
+              >
+                <Bookmark size={18} />
+                <span className="hidden sm:inline">Saved</span>
+              </button>
+              
+              <ExportChat messages={messages} />
               <SettingsModal />
+              
               <button
                 onClick={() => setIsDark(!isDark)}
                 className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-gray-700 text-yellow-400' : 'hover:bg-gray-100 text-gray-700'}`}
@@ -189,12 +213,14 @@ function App() {
                   </div>
                 )}
 
-                {messages.map((message) => (
+                {messages.map((message, index) => (
                   <ChatMessage
                     key={message.id}
+                    id={message.id}
                     role={message.role}
                     content={message.content}
                     timestamp={message.timestamp}
+                    question={index > 0 ? messages[index - 1]?.content : undefined}
                   />
                 ))}
 
@@ -273,39 +299,62 @@ function App() {
             "transition-all duration-300 space-y-4",
             "w-80 flex-shrink-0 hidden xl:block"
           )}>
-            <PrayerTimesWidget />
-
-            {/* Islamic Date */}
-            <div className="glass-morphism rounded-xl p-4 shadow-lg">
-              <h3 className="text-base font-semibold text-gradient mb-2">Today</h3>
-              <p className="text-xs text-gray-600">
-                {new Date().toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
+            {/* Tab selector */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  activeTab === 'chat'
+                    ? 'bg-islamic-green text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Chat
+              </button>
+              <button
+                onClick={() => setActiveTab('qibla')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  activeTab === 'qibla'
+                    ? 'bg-islamic-green text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Qibla
+              </button>
+              <button
+                onClick={() => setActiveTab('tasbeeh')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  activeTab === 'tasbeeh'
+                    ? 'bg-islamic-green text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Tasbeeh
+              </button>
             </div>
 
-            {/* Tips */}
-            <div className="glass-morphism rounded-xl p-4 shadow-lg">
-              <h3 className="text-base font-semibold text-gradient mb-2">💡 Tips</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>• Ask in any language</li>
-                <li>• Search Hadiths by topic</li>
-                <li>• Get Quran explanations</li>
-                <li>• Daily Islamic reminders</li>
-              </ul>
-            </div>
+            {activeTab === 'chat' && (
+              <>
+                <PrayerTimesWidget />
+                <HijriDate />
+                <FontSizeControl />
+              </>
+            )}
+
+            {activeTab === 'qibla' && <QiblaCompass />}
+            
+            {activeTab === 'tasbeeh' && <TasbeehCounter />}
           </div>
         </div>
       </main>
 
       {/* Footer */}
       <footer className="mt-2 py-3 text-center text-xs text-gray-600">
-        <p>Built with ❤️ for the Muslim Ummah • الحمد لله رب العالمين</p>
+        <p>Built with love for the Muslim Ummah • الحمد لله رب العالمين</p>
       </footer>
+
+      {/* Bookmarks Modal */}
+      <BookmarksView isOpen={showBookmarks} onClose={() => setShowBookmarks(false)} />
     </div>
   );
 }

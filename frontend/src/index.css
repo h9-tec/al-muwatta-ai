@@ -4,16 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --base-font-size: 16px;
+  --arabic-font-size: 17.6px;
+}
+
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
     direction: ltr;
+    font-size: var(--base-font-size);
   }
 
   .arabic-text {
     font-family: 'Amiri', serif;
     text-align: right;
     direction: rtl;
+    font-size: var(--arabic-font-size);
   }
 }
 

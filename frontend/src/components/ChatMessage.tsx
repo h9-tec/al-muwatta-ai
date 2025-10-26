@@ -2,11 +2,14 @@ import { Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../lib/utils';
+import { BookmarkButton } from './BookmarkButton';
 
 interface ChatMessageProps {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp?: Date;
+  question?: string;
 }
 
 // Detect if text is Arabic
@@ -16,7 +19,7 @@ const isArabicText = (text: string): boolean => {
   return arabicMatches ? arabicMatches.length > 10 : false;
 };
 
-export function ChatMessage({ role, content, timestamp }: ChatMessageProps) {
+export function ChatMessage({ id, role, content, timestamp, question }: ChatMessageProps) {
   const isUser = role === 'user';
   const isArabic = isArabicText(content);
 
@@ -65,14 +68,19 @@ export function ChatMessage({ role, content, timestamp }: ChatMessageProps) {
             </div>
           )}
         </div>
-        {timestamp && (
-          <span className="text-xs text-gray-500 mt-1 px-2">
-            {timestamp.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
-        )}
+        <div className="flex items-center gap-2 mt-1 px-2">
+          {timestamp && (
+            <span className="text-xs text-gray-500">
+              {timestamp.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          )}
+          {!isUser && (
+            <BookmarkButton messageId={id} content={content} question={question} />
+          )}
+        </div>
       </div>
     </div>
   );
