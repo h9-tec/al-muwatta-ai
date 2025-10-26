@@ -9,8 +9,12 @@ httpx==0.27.2
 requests==2.32.3
 aiohttp==3.10.10
 
-# Arabic NLP & GenAI - Google Gemini
+# Arabic NLP & GenAI - Multiple Providers
 google-generativeai==0.8.3
+ollama==0.4.5
+
+# Local LLM (optional)
+# llama-cpp-python==0.2.90  # Uncomment if using llama.cpp
 
 # Arabic Text Processing
 arabic-reshaper==3.0.0

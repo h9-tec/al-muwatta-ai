@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     app_version: str = Field(default="1.0.0", description="Application version")
     debug: bool = Field(default=True, description="Debug mode")
 
+    # LLM Configuration
+    use_local_llm: bool = Field(
+        default=False,
+        description="Use local LLM (Ollama) instead of Gemini",
+    )
+    
     # Google Gemini Configuration
     gemini_api_key: str = Field(
         default="AIzaSyDfrRICbsvG94HYIFveimWgh9KQNvUpWYk",
@@ -38,6 +44,16 @@ class Settings(BaseSettings):
     gemini_model: str = Field(
         default="gemini-2.0-flash-exp",
         description="Gemini model to use",
+    )
+    
+    # Ollama Configuration
+    ollama_model: str = Field(
+        default="qwen2.5:7b",
+        description="Ollama model name (for local inference)",
+    )
+    ollama_base_url: str = Field(
+        default="http://localhost:11434",
+        description="Ollama server URL",
     )
 
     # API Rate Limiting

@@ -4,6 +4,7 @@ import { ChatMessage } from './components/ChatMessage';
 import { PrayerTimesWidget } from './components/PrayerTimesWidget';
 import { QuickActions } from './components/QuickActions';
 import { UploadButton } from './components/UploadButton';
+import { SettingsModal } from './components/SettingsModal';
 import { aiApi } from './lib/api';
 import { detectLanguage, getLanguageInstruction } from './lib/language-detector';
 import { cn } from './lib/utils';
@@ -115,13 +116,16 @@ function App() {
               </div>
             </div>
             
-            <button
-              onClick={() => setIsDark(!isDark)}
-              className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-gray-700 text-yellow-400' : 'hover:bg-gray-100 text-gray-700'}`}
-              aria-label="Toggle theme"
-            >
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            <div className="flex items-center gap-2">
+              <SettingsModal />
+              <button
+                onClick={() => setIsDark(!isDark)}
+                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-gray-700 text-yellow-400' : 'hover:bg-gray-100 text-gray-700'}`}
+                aria-label="Toggle theme"
+              >
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            </div>
           </div>
         </div>
       </header>

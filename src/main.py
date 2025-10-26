@@ -20,6 +20,7 @@ from .routers import (
     prayer_times_router,
     ai_router,
     upload_router,
+    settings_router,
 )
 
 
@@ -162,6 +163,7 @@ app.include_router(quran_router)
 app.include_router(prayer_times_router)
 app.include_router(ai_router)
 app.include_router(upload_router)
+app.include_router(settings_router)
 
 
 # Root endpoint

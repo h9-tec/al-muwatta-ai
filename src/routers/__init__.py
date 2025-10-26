@@ -5,6 +5,7 @@ from .quran_router import router as quran_router
 from .prayer_times_router import router as prayer_times_router
 from .ai_router import router as ai_router
 from .upload_router import router as upload_router
+from .settings_router import router as settings_router
 
 __all__ = [
     "hadith_router",
@@ -12,5 +13,6 @@ __all__ = [
     "prayer_times_router",
     "ai_router",
     "upload_router",
+    "settings_router",
 ]
 
