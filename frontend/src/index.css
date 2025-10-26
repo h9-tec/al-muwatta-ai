@@ -31,19 +31,18 @@
 }
 
 @layer base {
-  * {
-    @apply antialiased;
-  }
-
   body {
-    @apply font-body text-neutral-900;
-    background: linear-gradient(135deg, var(--color-prophetic-white) 0%, var(--color-prophetic-cream) 100%);
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #FDFCFA 0%, #F5F3F0 100%);
     font-size: var(--base-font-size);
     direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   .arabic-text {
-    @apply font-arabic text-right;
+    font-family: 'Amiri', serif;
+    text-align: right;
     font-size: var(--arabic-font-size);
     direction: rtl;
     letter-spacing: 0;
