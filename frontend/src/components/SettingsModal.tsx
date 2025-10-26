@@ -16,8 +16,18 @@ interface Model {
 
 export function SettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const [providers, setProviders] = useState<Record<string, Provider>>({});
-  const [selectedProvider, setSelectedProvider] = useState('ollama');
+  
+  // Initialize with providers list
+  const [providers, setProviders] = useState<Record<string, Provider>>({
+    ollama: { name: 'Ollama (Local)', requires_api_key: false },
+    openrouter: { name: 'OpenRouter', requires_api_key: true },
+    groq: { name: 'Groq', requires_api_key: true },
+    openai: { name: 'OpenAI', requires_api_key: true },
+    anthropic: { name: 'Claude (Anthropic)', requires_api_key: true },
+    gemini: { name: 'Google Gemini', requires_api_key: true },
+  });
+  
+  const [selectedProvider, setSelectedProvider] = useState('gemini');
   const [apiKey, setApiKey] = useState('');
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
@@ -27,6 +37,14 @@ export function SettingsModal() {
   useEffect(() => {
     if (isOpen) {
       fetchProviders();
+      // Load saved settings
+      const savedProvider = localStorage.getItem('llm_provider');
+      const savedModel = localStorage.getItem('llm_model');
+      const savedKey = localStorage.getItem(`${selectedProvider}_api_key`);
+      
+      if (savedProvider) setSelectedProvider(savedProvider);
+      if (savedModel) setSelectedModel(savedModel);
+      if (savedKey) setApiKey(savedKey);
     }
   }, [isOpen]);
 
