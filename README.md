@@ -1044,8 +1044,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Maintainers
 
-- Built by [@hesham](https://github.com/hesham)
-- For questions: Open an issue on GitHub
+- **Built by**: [@h9-tec](https://github.com/h9-tec)
+- **Repository**: [al-muwatta-ai](https://github.com/h9-tec/al-muwatta-ai)
+- **For questions**: Open an issue on GitHub
 
 ---
 
@@ -1053,33 +1054,46 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Need Help?
 
-- 📧 **Email**: support@example.com
-- 💬 **Discord**: [Join our community](#)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- 📖 **Docs**: [Full Documentation](https://docs.example.com)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/h9-tec/al-muwatta-ai/issues)
+- 💡 **Discussions**: [GitHub Discussions](https://github.com/h9-tec/al-muwatta-ai/discussions)
+- 📖 **Documentation**: See markdown files in repository
+- ⭐ **Star the repo**: https://github.com/h9-tec/al-muwatta-ai
 
 ### Found a Bug?
 
-Please open an issue with:
-1. Description of the bug
-2. Steps to reproduce
-3. Expected vs actual behavior
-4. Screenshots if applicable
-5. Error logs
+Please [open an issue](https://github.com/h9-tec/al-muwatta-ai/issues/new) with:
+1. **Description** of the bug
+2. **Steps to reproduce**
+3. **Expected vs actual** behavior
+4. **Screenshots** if applicable
+5. **Error logs** from `logs/` folder
 
 ---
 
-## 🌟 Star History
+## 🌟 Star This Repository
 
-If you find this project useful, please consider giving it a ⭐ on GitHub!
+If you find **Al-Muwatta** useful, please give it a ⭐ on GitHub!
+
+**Repository**: https://github.com/h9-tec/al-muwatta-ai
+
+Every star helps others discover this unique Maliki fiqh platform! جزاك الله خيراً
 
 ---
 
-## 📞 Contact
+## 📞 Contact & Links
 
-- **Website**: https://nur-al-ilm.example.com
-- **GitHub**: https://github.com/your-username/nur-al-ilm
-- **Email**: contact@example.com
+- **GitHub Repository**: https://github.com/h9-tec/al-muwatta-ai
+- **Issues & Bugs**: https://github.com/h9-tec/al-muwatta-ai/issues
+- **Discussions**: https://github.com/h9-tec/al-muwatta-ai/discussions
+- **Maintainer**: [@h9-tec](https://github.com/h9-tec)
+
+### Want to Contribute?
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+- Adding Maliki fiqh content
+- Improving code
+- Fixing bugs
+- Translating documentation
 
 ---
 
