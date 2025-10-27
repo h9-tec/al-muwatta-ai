@@ -83,6 +83,9 @@ frontend/.cache/
 frontend/.parcel-cache/
 frontend/coverage/
 
+# Node.js (root level)
+node_modules/
+
 # Package managers
 package-lock.json
 yarn.lock
@@ -97,10 +100,16 @@ tmp/
 *.swp
 
 # Data & Scraped Content
-data/*.json
-data/*.csv
+data/**/*.json
+data/**/*.jsonl
+data/**/*.csv
+data/shamela/
+data/pdf/
+data/scraped_*
 scraped_data/
 raw_data/
+scripts/data/
+tools/**/data/
 
 # Model Cache
 .cache/
@@ -116,3 +125,14 @@ models/
 # Documentation builds
 docs/_build/
 site/
+
+# Scraped & Generated Files
+**/*_scraped.json
+**/*_generated.json
+**/scraped_*.json
+**/raw_text/*.json
+*.jsonl
+# Exception: Keep important config files
+!package.json
+!tsconfig.json
+!tsconfig.*.json

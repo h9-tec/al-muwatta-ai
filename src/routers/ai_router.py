@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from ..services import GeminiService, MultiLLMService
+from ..services.dspy_rag_service import get_dspy_rag
 from ..config import settings
 from ..models.schemas import (
     IslamicQuestionRequest,
@@ -434,4 +435,72 @@ async def explain_hadith(
     except Exception as e:
         logger.error(f"Error explaining Hadith: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/ask-dspy", summary="Ask using DSPy optimized RAG")
+async def ask_with_dspy(request: IslamicQuestionRequest) -> AIResponse:
+    """
+    Ask Islamic questions using DSPy-optimized RAG pipeline.
+
+    This endpoint uses DSPy's ChainOfThought reasoning with automatic
+    prompt optimization for better retrieval and answer quality.
+
+    Args:
+        request: Question request with language preferences
+
+    Returns:
+        AI-generated answer with reasoning trace and citations
+    """
+    try:
+        logger.info(f"DSPy RAG request: {request.question[:100]}...")
+
+        # Initialize DSPy RAG
+        dspy_rag = get_dspy_rag()
+
+        # Check if question is fiqh-related
+        is_fiqh, category = is_fiqh_question(request.question)
+
+        if not is_fiqh:
+            raise HTTPException(
+                status_code=400,
+                detail="DSPy RAG is optimized for Maliki fiqh questions only. Use /ask for general Islamic queries.",
+            )
+
+        # Get answer with DSPy
+        result = dspy_rag.answer_question(
+            question=request.question,
+            return_context=True,
+        )
+
+        # Format sources from context
+        sources = []
+        if "context" in result:
+            for ctx in result["context"]:
+                metadata = ctx.get("metadata", {})
+                sources.append({
+                    "type": "fiqh",
+                    "content": ctx.get("text", "")[:500],
+                    "reference": metadata.get("references", ""),
+                    "topic": metadata.get("topic", ""),
+                    "score": ctx.get("score", 0.0),
+                })
+
+        return AIResponse(
+            answer=result["answer"],
+            sources=sources,
+            language=request.language or "ar",
+            model="dspy-cot-gemini-2.0-flash",
+            metadata={
+                "citations": result.get("citations", ""),
+                "reasoning": result.get("reasoning", ""),
+                "framework": "dspy",
+                "retrieval_count": len(sources),
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"DSPy RAG error: {exc}")
+        raise HTTPException(status_code=500, detail=f"DSPy processing failed: {str(exc)}")
 

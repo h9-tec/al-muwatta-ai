@@ -23,6 +23,7 @@ DATA_DIR = Path("data")
 SCRAPED_FULL_PATH = DATA_DIR / "scraped_maliki_all.json"
 MALIKI_FIQHQA_FULL = DATA_DIR / "maliki_fiqhqa_full.jsonl"
 ARQAN_BLOG_PATH = DATA_DIR / "maliki_arqan_blog.jsonl"
+SHAMELA_CHUNKS_PATH = DATA_DIR / "shamela" / "json" / "shamela_maliki_chunks.jsonl"
 
 
 async def load_manual_maliki_content() -> List[Dict[str, Any]]:
@@ -372,17 +373,38 @@ def _load_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
 
 
 def _normalize_external_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize external document to standard format."""
     text = doc.get("text") or doc.get("markdown") or ""
-    metadata = {
-        "topic": doc.get("title", "Maliki Fiqh Resource"),
-        "madhab": "Maliki",
-        "category": doc.get("category") or doc.get("tags", ["general"])[0] if doc.get("tags") else "general",
-        "source": doc.get("source", "External Maliki Source"),
-        "references": doc.get("references", doc.get("url", "")),
-        "language": doc.get("language", "English"),
-        "url": doc.get("url"),
-        "tags": doc.get("tags", []),
-    }
+    
+    # Handle Shamela-specific structure
+    if "metadata" in doc and isinstance(doc["metadata"], dict):
+        # Already has metadata structure from shamela_converter
+        shamela_meta = doc["metadata"]
+        metadata = {
+            "topic": shamela_meta.get("book_title", "Shamela Book"),
+            "madhab": shamela_meta.get("madhab", "Maliki"),
+            "category": shamela_meta.get("category", "fiqh_maliki"),
+            "source": shamela_meta.get("source", "Shamela"),
+            "references": f"Shamela Book {shamela_meta.get('book_id', '')} - Page {shamela_meta.get('page', '')}",
+            "language": shamela_meta.get("language", "Arabic"),
+            "url": f"https://shamela.ws/book/{shamela_meta.get('book_id', '')}",
+            "tags": [shamela_meta.get("category", "fiqh")],
+            "book_id": shamela_meta.get("book_id"),
+            "page": shamela_meta.get("page"),
+        }
+    else:
+        # Standard external doc structure
+        metadata = {
+            "topic": doc.get("title", "Maliki Fiqh Resource"),
+            "madhab": "Maliki",
+            "category": doc.get("category") or doc.get("tags", ["general"])[0] if doc.get("tags") else "general",
+            "source": doc.get("source", "External Maliki Source"),
+            "references": doc.get("references", doc.get("url", "")),
+            "language": doc.get("language", "English"),
+            "url": doc.get("url"),
+            "tags": doc.get("tags", []),
+        }
+    
     return {"text": text, "metadata": metadata}
 
 
@@ -455,6 +477,12 @@ async def main():
     if fiqhqa_full_docs:
         external_docs.extend(fiqhqa_full_docs)
         print(f"   • Loaded {len(fiqhqa_full_docs)} items from {MALIKI_FIQHQA_FULL.name}")
+
+    # Load Shamela chunks
+    shamela_chunks = list(_load_jsonl(SHAMELA_CHUNKS_PATH))
+    if shamela_chunks:
+        external_docs.extend(shamela_chunks)
+        print(f"   • Loaded {len(shamela_chunks)} Shamela chunks from {SHAMELA_CHUNKS_PATH.name}")
 
     if external_docs:
         print("📦 Step 5: Ingesting external scraped content...")

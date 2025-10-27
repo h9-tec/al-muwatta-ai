@@ -174,15 +174,10 @@ class MalikiFiqhScraper:
         def _crawl() -> List[Dict[str, Any]]:
             items: List[Dict[str, Any]] = []
 
-            class _CollectorPipeline:
-                def process_item(self, item, spider):  # type: ignore[no-untyped-def]
-                    items.append(dict(item))
-                    return item
-
             settings = {
                 "LOG_ENABLED": False,
                 "USER_AGENT": "Mozilla/5.0 (compatible; MalikiFiqhBot/1.0)",
-                "ITEM_PIPELINES": {__name__ + "._CollectorPipeline": 1},
+                "ITEM_PIPELINES": {},
                 "FEEDS": {
                     str(SAYF_JSONL): {
                         "format": "jsonlines",
@@ -207,15 +202,10 @@ class MalikiFiqhScraper:
         def _crawl() -> List[Dict[str, Any]]:
             items: List[Dict[str, Any]] = []
 
-            class _CollectorPipeline:
-                def process_item(self, item, spider):  # type: ignore[no-untyped-def]
-                    items.append(dict(item))
-                    return item
-
             settings = {
                 "LOG_ENABLED": False,
                 "USER_AGENT": "Mozilla/5.0 (compatible; MalikiFiqhBot/1.0)",
-                "ITEM_PIPELINES": {__name__ + "._CollectorPipeline": 1},
+                "ITEM_PIPELINES": {},
                 "FEEDS": {
                     str(IIUM_JSONL): {
                         "format": "jsonlines",
