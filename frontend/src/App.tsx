@@ -93,7 +93,7 @@ function App() {
   
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'qibla' | 'tasbeeh'>('chat');
-  const [selectedMadhabs, setSelectedMadhabs] = useState<string[]>(() => {
+  const [selectedMadhabs] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('selected_madhabs');
       if (!saved) return [];

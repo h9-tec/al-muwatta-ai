@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Compass, MapPin, RefreshCw } from 'lucide-react';
 import { prayerTimesApi } from '../lib/api';
-import { calculateQiblaDirection } from '../lib/qibla';
 
 interface QiblaResponse {
   direction: number;
