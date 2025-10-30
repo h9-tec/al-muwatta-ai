@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from loguru import logger
 
 from ..services.multi_llm_service import MultiLLMService
+from ..services import get_fiqh_rag
 from ..services.cache_service import get_cache_service
 from ..config import settings
 
@@ -308,4 +309,20 @@ async def reset_cache_statistics() -> Dict[str, Any]:
             status_code=500,
             detail=f"Failed to reset cache statistics: {str(e)}"
         )
+
+
+@router.get("/madhabs", summary="List available fiqh madhabs with collection stats")
+async def list_madhabs() -> Dict[str, Any]:
+    """
+    Return available schools and their Qdrant collection status/counts.
+
+    Useful for UI to display readiness and document counts.
+    """
+    try:
+        rag = get_fiqh_rag()
+        stats = rag.get_statistics()
+        return stats
+    except Exception as exc:
+        logger.error(f"Failed to fetch madhab stats: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
 

@@ -49,11 +49,12 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
             if provider != "gemini":
                 raise HTTPException(status_code=400, detail="Streaming only supported with Gemini provider")
             if not is_fiqh:
-                raise HTTPException(status_code=400, detail="Streaming restricted to Maliki fiqh queries")
+                raise HTTPException(status_code=400, detail="Streaming restricted to fiqh queries")
             try:
                 stream_payload = await gemini.stream_fiqh_answer(
                     request.question,
                     language=request.language,
+                    madhabs=request.madhabs,
                 )
             except Exception as exc:  # pragma: no cover - runtime safeguard
                 logger.error(f"Streaming setup failed: {exc}")
@@ -70,6 +71,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         result = await gemini.answer_islamic_question(
             request.question,
             language=request.language,
+            madhabs=request.madhabs,
         )
 
         answer_text = result.get("answer")

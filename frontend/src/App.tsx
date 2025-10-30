@@ -93,6 +93,16 @@ function App() {
   
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'qibla' | 'tasbeeh'>('chat');
+  const [selectedMadhabs, setSelectedMadhabs] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('selected_madhabs');
+      if (!saved) return [];
+      const arr = JSON.parse(saved);
+      return Array.isArray(arr) ? (arr as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -145,7 +155,11 @@ function App() {
       
       // Send with language instruction and provider selection
       const enhancedPrompt = languageInstruction + messageText;
-      const response = await aiApi.ask(enhancedPrompt, detectedLang);
+      const response = await aiApi.ask(
+        enhancedPrompt,
+        detectedLang,
+        selectedMadhabs && selectedMadhabs.length > 0 ? selectedMadhabs : undefined,
+      );
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

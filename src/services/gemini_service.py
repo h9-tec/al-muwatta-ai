@@ -11,7 +11,7 @@ from loguru import logger
 import asyncio
 
 from ..config import settings
-from .rag_service import MalikiFiqhRAG
+from .fiqh_rag_service import FiqhRAG
 from ..utils.question_classifier import (
     is_fiqh_question,
     get_response_instructions,
@@ -46,8 +46,8 @@ class GeminiService:
             self.rag = None
             if enable_rag:
                 try:
-                    self.rag = MalikiFiqhRAG()
-                    logger.info("✅ RAG system enabled for Maliki fiqh")
+                    self.rag = FiqhRAG()
+                    logger.info("✅ RAG system enabled for multi-madhab fiqh")
                 except Exception as rag_error:
                     logger.warning(f"RAG initialization failed (will continue without RAG): {rag_error}")
 
@@ -193,6 +193,7 @@ Provide:
         self,
         question: str,
         language: str = "arabic",
+        madhabs: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Answer Islamic questions with scholarly references.
@@ -238,11 +239,17 @@ Provide:
         rag_chunks: List[Dict[str, Any]] = []
         if is_fiqh and self.rag:
             try:
-                rag_results = self.rag.search(question, n_results=5, score_threshold=0.25)
+                rag_results = self.rag.search(
+                    question,
+                    n_results=5,
+                    madhabs=madhabs,
+                    score_threshold=0.25,
+                )
                 rag_chunks = rag_results
                 rag_context = self.rag.get_relevant_context(
                     question,
                     max_context_length=1500,
+                    madhabs=madhabs,
                 )
                 if rag_context:
                     logger.info(
@@ -273,6 +280,16 @@ Provide:
         sources_text = "\n".join(source["content"] for source in structured_sources if source["content"].strip())
 
         if is_fiqh and sources_text:
+            # Build audience label depending on selected madhabs
+            selected_madhabs = (madhabs or [])
+            if selected_madhabs and len(selected_madhabs) == 1:
+                school_label = selected_madhabs[0].capitalize()
+                school_instruction = f"Direct answer based on {school_label} madhab"
+                ref_label = f"Use these verified {school_label} references for your answer (hide citations unless user asks):"
+            else:
+                school_instruction = "Present positions per selected madhabs and highlight agreements/differences"
+                ref_label = "Use these verified fiqh references from the selected schools (hide citations unless user asks):"
+
             if user_wants_sources:
                 citation_instruction = "IMPORTANT: Include source citations like [Source: Al-Risala] at the end of your answer."
             else:
@@ -281,14 +298,14 @@ Provide:
             prompt = f"""
 {scholar_role}
 
-**Use these verified Maliki references for your answer (hide citations unless user asks):**
+**{ref_label}**
 
 {sources_text}
 
 {question}
 
 Provide answer {lang_instruction}:
-1. Direct answer based on Maliki madhab
+1. {school_instruction}
 2. Evidence from Quran and Hadith
 3. Practical guidance if relevant
 
@@ -336,6 +353,7 @@ Do NOT show source citations unless user explicitly requests them.
         self,
         question: str,
         language: str,
+        madhabs: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         is_fiqh, category = is_fiqh_question(question)
         if not is_fiqh:
@@ -344,9 +362,16 @@ Do NOT show source citations unless user explicitly requests them.
         rag_context = ""
         rag_chunks: List[Dict[str, Any]] = []
         if self.rag:
-            rag_results = self.rag.search(question, n_results=5, score_threshold=0.25)
+            rag_results = self.rag.search(
+                question,
+                n_results=5,
+                madhabs=madhabs,
+                score_threshold=0.25,
+            )
             rag_chunks = rag_results
-            rag_context = self.rag.get_relevant_context(question, max_context_length=1500)
+            rag_context = self.rag.get_relevant_context(
+                question, max_context_length=1500, madhabs=madhabs
+            )
         if not rag_context:
             raise RuntimeError("Maliki fiqh context unavailable")
 
@@ -361,17 +386,27 @@ Do NOT show source citations unless user explicitly requests them.
             lang_instruction = "in clear, natural English"
 
         scholar_role = get_response_instructions(True, category, language)
+        # Build label depending on selected madhabs
+        selected_madhabs = (madhabs or [])
+        if selected_madhabs and len(selected_madhabs) == 1:
+            school_label = selected_madhabs[0].capitalize()
+            school_instruction = f"Direct ruling per {school_label} madhab"
+            ref_label = f"Use these verified {school_label} references for your answer:"
+        else:
+            school_instruction = "Present positions per selected madhabs and highlight agreements/differences"
+            ref_label = "Use these verified fiqh references from the selected schools:"
+
         prompt = f"""
 {scholar_role}
 
-**Use these verified Maliki references for your answer:**
+**{ref_label}**
 
 {rag_context}
 
 {question}
 
 Provide answer {lang_instruction}:
-1. Direct ruling per Maliki madhab
+1. {school_instruction}
 2. Supporting evidence from Quran/Hadith
 3. Practical guidance
 
