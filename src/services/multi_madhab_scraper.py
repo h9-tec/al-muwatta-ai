@@ -35,7 +35,7 @@ def load_predefined_content() -> List[Dict[str, Any]]:
     for key, scraper, method_name in scrapers:
         try:
             getter = getattr(scraper, method_name)
-            docs = getter()  # type: ignore[call-arg]
+            docs = getter()
             logger.info(f"Loaded {len(docs)} curated documents for {key}")
             all_docs.extend(docs)
         except Exception as exc:

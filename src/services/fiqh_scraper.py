@@ -27,7 +27,7 @@ except ModuleNotFoundError:  # pragma: no cover
     ROOT = Path(__file__).resolve().parents[2]
     if str(ROOT) not in sys.path:
         sys.path.append(str(ROOT))
-    from scrapers.comprehensive_maliki_scraper import (  # type: ignore
+    from scrapers.comprehensive_maliki_scraper import (
         SayfAlHaqqMalikiSpider,
         IIUMLawbaseMalikiSpider,
     )

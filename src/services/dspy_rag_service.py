@@ -9,7 +9,7 @@ Implements optimized RAG workflows using DSPy framework with:
 """
 
 import os
-from typing import List, Dict, Any, Optional, Iterator
+from typing import List, Dict, Any, Optional, Iterator, Callable
 import dspy
 from dspy.retrieve.qdrant_rm import QdrantRM
 from loguru import logger
@@ -223,7 +223,7 @@ Source: {metadata.get('source', 'Unknown')}
     def optimize_prompts(
         self,
         training_examples: List[dspy.Example],
-        metric: Optional[callable] = None,
+        metric: Optional[Callable[..., float]] = None,
     ) -> None:
         """
         Optimize prompts using DSPy's automatic optimization.
