@@ -6,6 +6,7 @@ Surah retrieval, Ayah access, Juz/page queries, and edition management.
 """
 
 import pytest
+
 from src.api_clients import QuranAPIClient
 
 
@@ -235,4 +236,3 @@ class TestQuranAPIClient:
             assert isinstance(quran, dict)
             assert "surahs" in quran
             assert len(quran["surahs"]) == 114
-

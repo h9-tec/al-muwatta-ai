@@ -7,12 +7,12 @@ This client interfaces with multiple Hadith APIs including:
 - hadith.p.rapidapi.com (free tier)
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from loguru import logger
 
-from .base_client import BaseAPIClient
 from ..config import settings
+from .base_client import BaseAPIClient
 
 
 class HadithAPIClient(BaseAPIClient):
@@ -32,7 +32,7 @@ class HadithAPIClient(BaseAPIClient):
         if settings.sunnah_api_key:
             self.sunnah_headers["X-API-Key"] = settings.sunnah_api_key
 
-    async def get_collections(self) -> List[Dict[str, Any]]:
+    async def get_collections(self) -> list[dict[str, Any]]:
         """
         Get all available Hadith collections.
 
@@ -53,7 +53,7 @@ class HadithAPIClient(BaseAPIClient):
             logger.error(f"Failed to get Hadith collections: {e}")
             return []
 
-    async def get_collection_by_name(self, collection_name: str) -> Optional[Dict[str, Any]]:
+    async def get_collection_by_name(self, collection_name: str) -> dict[str, Any] | None:
         """
         Get a specific Hadith collection by name.
 
@@ -78,7 +78,7 @@ class HadithAPIClient(BaseAPIClient):
             logger.error(f"Failed to get collection '{collection_name}': {e}")
             return None
 
-    async def get_books_from_collection(self, collection_name: str) -> List[Dict[str, Any]]:
+    async def get_books_from_collection(self, collection_name: str) -> list[dict[str, Any]]:
         """
         Get all books from a specific Hadith collection.
 
@@ -109,7 +109,7 @@ class HadithAPIClient(BaseAPIClient):
         book_number: int,
         page: int = 1,
         limit: int = 50,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get Hadiths from a specific book in a collection.
 
@@ -137,16 +137,14 @@ class HadithAPIClient(BaseAPIClient):
             )
             return response
         except Exception as e:
-            logger.error(
-                f"Failed to get Hadiths from '{collection_name}' book {book_number}: {e}"
-            )
+            logger.error(f"Failed to get Hadiths from '{collection_name}' book {book_number}: {e}")
             return {"data": [], "total": 0, "limit": limit, "page": page}
 
     async def get_hadith_by_number(
         self,
         collection_name: str,
         hadith_number: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get a specific Hadith by its number.
 
@@ -170,18 +168,16 @@ class HadithAPIClient(BaseAPIClient):
             )
             return response.get("data")
         except Exception as e:
-            logger.error(
-                f"Failed to get Hadith #{hadith_number} from '{collection_name}': {e}"
-            )
+            logger.error(f"Failed to get Hadith #{hadith_number} from '{collection_name}': {e}")
             return None
 
     async def search_hadith(
         self,
         query: str,
-        collection_name: Optional[str] = None,
+        collection_name: str | None = None,
         page: int = 1,
         limit: int = 20,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Search for Hadiths matching a query.
 
@@ -232,7 +228,7 @@ class HadithAPIClient(BaseAPIClient):
             logger.error(f"Fallback hadith search failed: {fallback_error}")
             return {"data": [], "total": 0, "limit": limit, "page": page}
 
-    async def get_random_hadith(self) -> Optional[Dict[str, Any]]:
+    async def get_random_hadith(self) -> dict[str, Any] | None:
         """
         Get a random Hadith from various collections.
 
@@ -271,4 +267,3 @@ class HadithAPIClient(BaseAPIClient):
         except Exception as e:
             logger.error(f"Failed to get random Hadith: {e}")
             return None
-

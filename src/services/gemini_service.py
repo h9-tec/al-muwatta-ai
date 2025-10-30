@@ -5,22 +5,23 @@ This service provides intelligent Arabic content generation, question answering,
 and contextual understanding using Google's Gemini models with RAG enhancement.
 """
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+import asyncio
+from typing import TYPE_CHECKING, Any
+
 import google.generativeai as genai
 from loguru import logger
-import asyncio
 
 from ..config import settings
 from ..utils.question_classifier import (
-    is_fiqh_question,
-    get_response_instructions,
-    wants_sources,
-    is_arabic_text,
     detect_arabic_dialect,
+    get_response_instructions,
+    is_arabic_text,
+    is_fiqh_question,
+    wants_sources,
 )
 
 if TYPE_CHECKING:
-    from ..api_clients import QuranAPIClient, QuranComAPIClient, HadithAPIClient, PrayerTimesAPIClient
+    pass
 
 
 class GeminiService:
@@ -47,14 +48,22 @@ class GeminiService:
                 try:
                     # Lazy import to avoid heavy deps at import time
                     from .fiqh_rag_service import FiqhRAG  # type: ignore
+
                     self.rag = FiqhRAG()
                     logger.info("✅ RAG system enabled for multi-madhab fiqh")
                 except Exception as rag_error:
-                    logger.warning(f"RAG initialization failed (will continue without RAG): {rag_error}")
+                    logger.warning(
+                        f"RAG initialization failed (will continue without RAG): {rag_error}"
+                    )
 
             # Lazy import to avoid circular dependency
-            from ..api_clients import QuranAPIClient, QuranComAPIClient, HadithAPIClient, PrayerTimesAPIClient
-            
+            from ..api_clients import (
+                HadithAPIClient,
+                PrayerTimesAPIClient,
+                QuranAPIClient,
+                QuranComAPIClient,
+            )
+
             self.quran_client = QuranAPIClient()
             self.hadith_client = HadithAPIClient()
             self.quran_com_client = QuranComAPIClient()
@@ -69,7 +78,7 @@ class GeminiService:
         prompt: str,
         temperature: float = 0.7,
         max_tokens: int = 1000,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Generate content using Gemini AI.
 
@@ -111,7 +120,7 @@ class GeminiService:
         self,
         hadith_text: str,
         language: str = "arabic",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Provide detailed explanation of a Hadith.
 
@@ -150,7 +159,7 @@ Hadith:
         surah_name: str,
         verse_number: int,
         language: str = "arabic",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Provide tafsir (explanation) of a Quranic verse.
 
@@ -194,8 +203,8 @@ Provide:
         self,
         question: str,
         language: str = "arabic",
-        madhabs: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        madhabs: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Answer Islamic questions with scholarly references.
 
@@ -217,9 +226,9 @@ Provide:
         if language == "arabic" or is_arabic_text(question):
             if dialect != "msa":
                 lang_instruction = (
-                    "in Arabic, matching the user's dialect ({dialect})."
+                    f"in Arabic, matching the user's dialect ({dialect})."
                     " Maintain colloquial phrasing and tone while keeping jurisprudential terminology precise."
-                ).format(dialect=dialect)
+                )
             else:
                 lang_instruction = (
                     "in Arabic, using the EXACT same dialect, style, and formality level as the user's question.\n"
@@ -234,10 +243,10 @@ Provide:
         # Detect if this is a fiqh question
         is_fiqh, question_category = is_fiqh_question(question)
         user_wants_sources = wants_sources(question)
-        
+
         # Get relevant context from RAG ONLY if it's a fiqh question
         rag_context = ""
-        rag_chunks: List[Dict[str, Any]] = []
+        rag_chunks: list[dict[str, Any]] = []
         if is_fiqh and self.rag:
             try:
                 rag_results = self.rag.search(
@@ -273,29 +282,33 @@ Provide:
             {"type": "hadith", "content": hadith_context},
             {"type": "fiqh", "content": rag_context},
         ]
-        
+
         # Get appropriate instructions based on question type
         scholar_role = get_response_instructions(is_fiqh, question_category, language)
 
         # Build prompt differently for fiqh vs non-fiqh questions
-        sources_text = "\n".join(source["content"] for source in structured_sources if source["content"].strip())
+        sources_text = "\n".join(
+            source["content"] for source in structured_sources if source["content"].strip()
+        )
 
         if is_fiqh and sources_text:
             # Build audience label depending on selected madhabs
-            selected_madhabs = (madhabs or [])
+            selected_madhabs = madhabs or []
             if selected_madhabs and len(selected_madhabs) == 1:
                 school_label = selected_madhabs[0].capitalize()
                 school_instruction = f"Direct answer based on {school_label} madhab"
                 ref_label = f"Use these verified {school_label} references for your answer (hide citations unless user asks):"
             else:
-                school_instruction = "Present positions per selected madhabs and highlight agreements/differences"
+                school_instruction = (
+                    "Present positions per selected madhabs and highlight agreements/differences"
+                )
                 ref_label = "Use these verified fiqh references from the selected schools (hide citations unless user asks):"
 
             if user_wants_sources:
                 citation_instruction = "IMPORTANT: Include source citations like [Source: Al-Risala] at the end of your answer."
             else:
                 citation_instruction = "Do NOT show source citations or references in your answer. Use the sources for knowledge but hide the citations."
-            
+
             prompt = f"""
 {scholar_role}
 
@@ -336,7 +349,9 @@ Do NOT mention Maliki madhab, fiqh schools, or jurisprudence unless specifically
 Do NOT show source citations unless user explicitly requests them.
 """
 
-            logger.info(f"ℹ️ Non-fiqh {question_category} question - using general Islamic knowledge")
+            logger.info(
+                f"ℹ️ Non-fiqh {question_category} question - using general Islamic knowledge"
+            )
 
         answer = await self.generate_content(prompt, temperature=0.6, max_tokens=2500)
         return {
@@ -354,14 +369,14 @@ Do NOT show source citations unless user explicitly requests them.
         self,
         question: str,
         language: str,
-        madhabs: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        madhabs: list[str] | None = None,
+    ) -> dict[str, Any]:
         is_fiqh, category = is_fiqh_question(question)
         if not is_fiqh:
             raise RuntimeError("Streaming is limited to Maliki fiqh questions")
 
         rag_context = ""
-        rag_chunks: List[Dict[str, Any]] = []
+        rag_chunks: list[dict[str, Any]] = []
         if self.rag:
             rag_results = self.rag.search(
                 question,
@@ -388,13 +403,15 @@ Do NOT show source citations unless user explicitly requests them.
 
         scholar_role = get_response_instructions(True, category, language)
         # Build label depending on selected madhabs
-        selected_madhabs = (madhabs or [])
+        selected_madhabs = madhabs or []
         if selected_madhabs and len(selected_madhabs) == 1:
             school_label = selected_madhabs[0].capitalize()
             school_instruction = f"Direct ruling per {school_label} madhab"
             ref_label = f"Use these verified {school_label} references for your answer:"
         else:
-            school_instruction = "Present positions per selected madhabs and highlight agreements/differences"
+            school_instruction = (
+                "Present positions per selected madhabs and highlight agreements/differences"
+            )
             ref_label = "Use these verified fiqh references from the selected schools:"
 
         prompt = f"""
@@ -457,7 +474,7 @@ Hide explicit reference citations unless asked. Answer with structured sections.
         self,
         topic: str,
         language: str = "arabic",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Find connections between Quranic verses and Hadiths on a specific topic.
 
@@ -501,7 +518,7 @@ Format your response clearly with sections.
         text: str,
         summary_length: str = "medium",
         language: str = "arabic",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Summarize Islamic texts while preserving key meanings.
 
@@ -541,7 +558,7 @@ Text:
         text: str,
         source_lang: str = "arabic",
         target_lang: str = "english",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Translate Islamic texts with cultural and religious context.
 
@@ -577,9 +594,9 @@ Text:
 
     async def generate_daily_reminder(
         self,
-        theme: Optional[str] = None,
+        theme: str | None = None,
         language: str = "arabic",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Generate a daily Islamic reminder/inspiration.
 
@@ -614,7 +631,7 @@ Keep it concise and inspiring.
         self,
         hadith_text: str,
         claimed_source: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Provide guidance on verifying Hadith authenticity.
 
@@ -652,39 +669,41 @@ Note: This is educational guidance, not a definitive ruling.
     async def _fetch_quran_context(self, question: str) -> str:
         """
         Fetch relevant Quranic verses for the user's question.
-        
+
         Tries cache first (instant), falls back to API if needed.
         """
         # Try cache first (FAST - no API calls!)
         try:
             from .cached_content_service import get_cached_content_service
+
             cached_service = get_cached_content_service()
-            
+
             # Search in cache for Arabic verses
             cached_verses = await cached_service.search_quran_in_cache(
-                question,
-                edition="quran-uthmani",
-                limit=3
+                question, edition="quran-uthmani", limit=3
             )
-            
+
             if cached_verses:
                 logger.info(f"✅ Using {len(cached_verses)} Quran verses from CACHE")
                 contexts = []
                 for verse in cached_verses:
-                    surah_name = verse.get('surah_name', '')
-                    ayah_num = verse.get('ayah_number', '')
-                    text = verse.get('text', '')
+                    surah_name = verse.get("surah_name", "")
+                    ayah_num = verse.get("ayah_number", "")
+                    text = verse.get("text", "")
                     contexts.append(f"[Quran {surah_name} {ayah_num}]\n{text}\n")
                 return "\n".join(contexts)
         except Exception as exc:
             logger.warning(f"Cache search failed, falling back to API: {exc}")
-        
+
         # Fallback to API if cache miss
         try:
             from ..api_clients import QuranAPIClient
+
             async with QuranAPIClient() as client:
                 search_results = await client.search_quran(question, edition="quran-uthmani")
-                matches = search_results.get("matches") if isinstance(search_results, dict) else None
+                matches = (
+                    search_results.get("matches") if isinstance(search_results, dict) else None
+                )
                 if matches:
                     contexts = []
                     for match in matches[:3]:
@@ -694,13 +713,13 @@ Note: This is educational guidance, not a definitive ruling.
                     return "\n".join(contexts)
         except Exception as exc:
             logger.warning(f"Quran API search failed: {exc}")
-        
+
         return ""
 
     async def _fetch_hadith_context(self, question: str, is_fiqh: bool) -> str:
         """
         Fetch supporting hadith narrations.
-        
+
         Tries cache first (instant), falls back to API if needed.
         For fiqh questions, prioritizes Muwatta Malik.
         """
@@ -710,38 +729,36 @@ Note: This is educational guidance, not a definitive ruling.
         # Try cache first (FAST - no API calls!)
         try:
             from .cached_content_service import get_cached_content_service
+
             cached_service = get_cached_content_service()
-            
+
             # For Maliki fiqh questions, prioritize Muwatta Malik
             if is_fiqh:
                 collections = ["malik", "bukhari", "muslim"]
             else:
                 collections = ["bukhari", "muslim", "malik"]
-            
+
             cached_hadiths = await cached_service.search_hadith_in_cache(
-                question,
-                collections=collections,
-                limit=3
+                question, collections=collections, limit=3
             )
-            
+
             if cached_hadiths:
                 logger.info(f"✅ Using {len(cached_hadiths)} Hadiths from CACHE")
                 contexts = []
                 for hadith in cached_hadiths:
-                    collection = hadith.get('collection', '').title()
-                    number = hadith.get('number', '')
-                    arab = hadith.get('arab', '')
-                    text = hadith.get('text', '')
-                    contexts.append(
-                        f"[Hadith {collection} #{number}]\n{arab}\n{text}\n"
-                    )
+                    collection = hadith.get("collection", "").title()
+                    number = hadith.get("number", "")
+                    arab = hadith.get("arab", "")
+                    text = hadith.get("text", "")
+                    contexts.append(f"[Hadith {collection} #{number}]\n{arab}\n{text}\n")
                 return "\n".join(contexts)
         except Exception as exc:
             logger.warning(f"Cache search failed, falling back to API: {exc}")
-        
+
         # Fallback to API if cache miss
         try:
             from ..api_clients import HadithAPIClient
+
             async with HadithAPIClient() as client:
                 search_results = await client.search_hadith(query=question, limit=3)
                 data = search_results.get("data", []) if isinstance(search_results, dict) else []
@@ -758,4 +775,3 @@ Note: This is educational guidance, not a definitive ruling.
         except Exception as exc:
             logger.warning(f"Hadith API search failed: {exc}")
         return ""
-

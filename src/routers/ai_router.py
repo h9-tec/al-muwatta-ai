@@ -7,20 +7,19 @@ Islamic knowledge, questions, explanations, and content generation.
 
 import json
 
-from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
-from ..services import GeminiService, MultiLLMService
-from ..services.dspy_rag_service import get_dspy_rag
 from ..config import settings
 from ..models.schemas import (
+    AIResponse,
     IslamicQuestionRequest,
     ThematicStudyRequest,
     TranslationRequest,
-    AIResponse,
 )
+from ..services import GeminiService, MultiLLMService
+from ..services.dspy_rag_service import get_dspy_rag
 from ..utils.question_classifier import is_fiqh_question
 
 router = APIRouter(prefix="/api/v1/ai", tags=["AI Assistant"])
@@ -47,7 +46,9 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         is_fiqh, category = is_fiqh_question(request.question)
         if request.stream:
             if provider != "gemini":
-                raise HTTPException(status_code=400, detail="Streaming only supported with Gemini provider")
+                raise HTTPException(
+                    status_code=400, detail="Streaming only supported with Gemini provider"
+                )
             if not is_fiqh:
                 raise HTTPException(status_code=400, detail="Streaming restricted to fiqh queries")
             try:
@@ -77,9 +78,13 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         answer_text = result.get("answer")
         rag_chunks = result.get("rag_chunks", [])
         if not answer_text or (is_fiqh and not rag_chunks):
-            raise HTTPException(status_code=503, detail="Could not generate answer from Maliki sources")
+            raise HTTPException(
+                status_code=503, detail="Could not generate answer from Maliki sources"
+            )
 
-        structured_sources = [source for source in result.get("sources", []) if source.get("content")]
+        structured_sources = [
+            source for source in result.get("sources", []) if source.get("content")
+        ]
         raw_context = result.get("raw_context", {})
 
         if provider != "gemini":
@@ -479,13 +484,15 @@ async def ask_with_dspy(request: IslamicQuestionRequest) -> AIResponse:
         if "context" in result:
             for ctx in result["context"]:
                 metadata = ctx.get("metadata", {})
-                sources.append({
-                    "type": "fiqh",
-                    "content": ctx.get("text", "")[:500],
-                    "reference": metadata.get("references", ""),
-                    "topic": metadata.get("topic", ""),
-                    "score": ctx.get("score", 0.0),
-                })
+                sources.append(
+                    {
+                        "type": "fiqh",
+                        "content": ctx.get("text", "")[:500],
+                        "reference": metadata.get("references", ""),
+                        "topic": metadata.get("topic", ""),
+                        "score": ctx.get("score", 0.0),
+                    }
+                )
 
         return AIResponse(
             answer=result["answer"],
@@ -505,4 +512,3 @@ async def ask_with_dspy(request: IslamicQuestionRequest) -> AIResponse:
     except Exception as exc:
         logger.error(f"DSPy RAG error: {exc}")
         raise HTTPException(status_code=500, detail=f"DSPy processing failed: {str(exc)}")
-

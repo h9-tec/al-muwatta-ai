@@ -9,9 +9,10 @@ Implements optimized RAG workflows using DSPy framework with:
 """
 
 import os
-from typing import List, Dict, Any, Optional, Iterator, Callable
+from collections.abc import Callable, Iterator
+from typing import Any
+
 import dspy
-from dspy.retrieve.qdrant_rm import QdrantRM
 from loguru import logger
 
 from .rag_service import MalikiFiqhRAG
@@ -54,10 +55,9 @@ class FiqhChainOfThought(dspy.Module):
         context_passages = self.retrieve(question).passages
 
         # Format context
-        context = "\n\n".join([
-            f"[Source {i+1}]\n{passage}"
-            for i, passage in enumerate(context_passages)
-        ])
+        context = "\n\n".join(
+            [f"[Source {i+1}]\n{passage}" for i, passage in enumerate(context_passages)]
+        )
 
         # Generate answer with chain of thought
         prediction = self.generate_answer(context=context, question=question)
@@ -70,7 +70,7 @@ class DSPyMalikiFiqhRAG:
 
     def __init__(
         self,
-        rag_service: Optional[MalikiFiqhRAG] = None,
+        rag_service: MalikiFiqhRAG | None = None,
         model_name: str = "gemini/gemini-2.0-flash-exp",
         num_passages: int = 5,
     ) -> None:
@@ -91,7 +91,7 @@ class DSPyMalikiFiqhRAG:
             raise ValueError("GEMINI_API_KEY environment variable required")
 
         logger.info(f"Configuring DSPy with model: {model_name}")
-        
+
         # Set up LiteLLM-based language model
         self.lm = dspy.LM(
             model=model_name,
@@ -112,7 +112,7 @@ class DSPyMalikiFiqhRAG:
 
     def _setup_retrieval(self) -> None:
         """Configure DSPy retrieval to use our existing Qdrant service."""
-        
+
         class QdrantRetriever(dspy.Retrieve):
             """Custom retriever wrapping our MalikiFiqhRAG service."""
 
@@ -120,7 +120,7 @@ class DSPyMalikiFiqhRAG:
                 super().__init__(k=k)
                 self.rag = rag_service
 
-            def forward(self, query: str, k: Optional[int] = None) -> List[str]:
+            def forward(self, query: str, k: int | None = None) -> list[str]:
                 """
                 Retrieve passages from Qdrant.
 
@@ -138,7 +138,7 @@ class DSPyMalikiFiqhRAG:
                 for result in results:
                     text = result.get("text", "")
                     metadata = result.get("metadata", {})
-                    
+
                     # Format with metadata for better context
                     formatted = f"""**{metadata.get('topic', 'Unknown')}**
 Category: {metadata.get('category', 'general')}
@@ -156,7 +156,7 @@ Source: {metadata.get('source', 'Unknown')}
         self,
         question: str,
         return_context: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Answer a fiqh question using DSPy ChainOfThought.
 
@@ -211,10 +211,10 @@ Source: {metadata.get('source', 'Unknown')}
             answer = prediction.answer
 
             # Yield in sentence-sized chunks for streaming effect
-            sentences = answer.split('.')
+            sentences = answer.split(".")
             for sentence in sentences:
                 if sentence.strip():
-                    yield sentence.strip() + '. '
+                    yield sentence.strip() + ". "
 
         except Exception as exc:
             logger.error(f"DSPy streaming error: {exc}")
@@ -222,8 +222,8 @@ Source: {metadata.get('source', 'Unknown')}
 
     def optimize_prompts(
         self,
-        training_examples: List[dspy.Example],
-        metric: Optional[Callable[..., float]] = None,
+        training_examples: list[dspy.Example],
+        metric: Callable[..., float] | None = None,
     ) -> None:
         """
         Optimize prompts using DSPy's automatic optimization.
@@ -276,7 +276,7 @@ Source: {metadata.get('source', 'Unknown')}
         return 1.0 if (has_answer and has_citations) else 0.0
 
 
-def create_training_examples() -> List[dspy.Example]:
+def create_training_examples() -> list[dspy.Example]:
     """
     Create training examples for prompt optimization.
 
@@ -302,7 +302,7 @@ def create_training_examples() -> List[dspy.Example]:
 
 
 # Singleton instance
-_dspy_rag_instance: Optional[DSPyMalikiFiqhRAG] = None
+_dspy_rag_instance: DSPyMalikiFiqhRAG | None = None
 
 
 def get_dspy_rag() -> DSPyMalikiFiqhRAG:
@@ -318,8 +318,3 @@ def get_dspy_rag() -> DSPyMalikiFiqhRAG:
         _dspy_rag_instance = DSPyMalikiFiqhRAG()
 
     return _dspy_rag_instance
-
-
-
-
-

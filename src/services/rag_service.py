@@ -5,12 +5,13 @@ This service implements vector search and retrieval for Islamic jurisprudence
 using Qdrant and sentence transformers.
 """
 
-from typing import List, Dict, Any, Optional
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
-from sentence_transformers import SentenceTransformer
-from loguru import logger
 import uuid
+from typing import Any
+
+from loguru import logger
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, PointStruct, VectorParams
+from sentence_transformers import SentenceTransformer
 
 from .fiqh_scraper import MalikiFiqhScraper
 
@@ -38,7 +39,7 @@ class MalikiFiqhRAG:
             logger.info("Loading multilingual embedding model...")
             # paraphrase-multilingual-MiniLM-L12-v2 - small, fast, supports 50+ languages including Arabic
             self.embedding_model = SentenceTransformer(
-                'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
+                "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
             )
             self.embedding_dim = 384  # Dimension for this model
             logger.info("✅ Embedding model loaded (384 dimensions, multilingual)")
@@ -52,14 +53,11 @@ class MalikiFiqhRAG:
             except Exception:
                 self.client.create_collection(
                     collection_name=collection_name,
-                    vectors_config=VectorParams(
-                        size=self.embedding_dim,
-                        distance=Distance.COSINE
-                    ),
+                    vectors_config=VectorParams(size=self.embedding_dim, distance=Distance.COSINE),
                 )
                 logger.info(f"✅ Created collection: {collection_name}")
 
-            logger.info(f"RAG system initialized with Qdrant")
+            logger.info("RAG system initialized with Qdrant")
 
         except Exception as e:
             logger.error(f"Failed to initialize RAG system: {e}")
@@ -130,9 +128,9 @@ class MalikiFiqhRAG:
         self,
         query: str,
         n_results: int = 3,
-        category_filter: Optional[str] = None,
+        category_filter: str | None = None,
         score_threshold: float = 0.5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Search the Maliki fiqh knowledge base using semantic search.
 
@@ -161,14 +159,7 @@ class MalikiFiqhRAG:
             # Build filter
             query_filter = None
             if category_filter:
-                query_filter = {
-                    "must": [
-                        {
-                            "key": "category",
-                            "match": {"value": category_filter}
-                        }
-                    ]
-                }
+                query_filter = {"must": [{"key": "category", "match": {"value": category_filter}}]}
 
             # Search in Qdrant
             search_results = self.client.search(
@@ -182,17 +173,19 @@ class MalikiFiqhRAG:
             # Format results
             formatted_results = []
             for result in search_results:
-                formatted_results.append({
-                    "text": result.payload.get("text", ""),
-                    "metadata": {
-                        "topic": result.payload.get("topic", ""),
-                        "category": result.payload.get("category", ""),
-                        "source": result.payload.get("source", ""),
-                        "references": result.payload.get("references", ""),
-                    },
-                    "score": result.score,
-                    "id": result.id,
-                })
+                formatted_results.append(
+                    {
+                        "text": result.payload.get("text", ""),
+                        "metadata": {
+                            "topic": result.payload.get("topic", ""),
+                            "category": result.payload.get("category", ""),
+                            "source": result.payload.get("source", ""),
+                            "references": result.payload.get("references", ""),
+                        },
+                        "score": result.score,
+                        "id": result.id,
+                    }
+                )
 
             logger.info(f"Found {len(formatted_results)} results for query: {query[:50]}...")
             return formatted_results
@@ -236,9 +229,9 @@ class MalikiFiqhRAG:
         current_length = 0
 
         for i, result in enumerate(results, 1):
-            text = result['text']
-            metadata = result['metadata']
-            score = result.get('score', 0)
+            text = result["text"]
+            metadata = result["metadata"]
+            score = result.get("score", 0)
 
             # Format with source citation
             formatted = f"""
@@ -259,7 +252,7 @@ class MalikiFiqhRAG:
 
         return "\n".join(context_parts)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get knowledge base statistics.
 
@@ -285,7 +278,7 @@ class MalikiFiqhRAG:
     def add_document(
         self,
         text: str,
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
     ) -> bool:
         """
         Add a single document to the knowledge base.

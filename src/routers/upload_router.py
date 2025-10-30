@@ -5,12 +5,12 @@ This router handles image and PDF uploads for OCR processing and
 adding to the Maliki fiqh RAG system.
 """
 
-from typing import Dict, Any
-from fastapi import APIRouter, File, UploadFile, HTTPException, Form
-from fastapi.responses import JSONResponse
-from loguru import logger
-from pathlib import Path
 import shutil
+from pathlib import Path
+from typing import Any
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from loguru import logger
 
 from ..services.ocr_service import OCRService
 from ..services.rag_service import MalikiFiqhRAG
@@ -28,7 +28,7 @@ async def upload_book_image(
     title: str = Form(..., description="Book/section title"),
     category: str = Form("general", description="Category (salah, zakat, etc.)"),
     add_to_knowledge_base: bool = Form(True, description="Add to RAG"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Upload a book image, extract text using OCR, and optionally add to knowledge base.
 
@@ -43,11 +43,8 @@ async def upload_book_image(
     """
     try:
         # Validate file type
-        if not file.content_type.startswith('image/'):
-            raise HTTPException(
-                status_code=400,
-                detail="Only image files are supported (JPG, PNG)"
-            )
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Only image files are supported (JPG, PNG)")
 
         # Save uploaded file
         file_path = UPLOAD_DIR / f"{file.filename}"
@@ -64,10 +61,7 @@ async def upload_book_image(
         )
 
         if not extracted_text:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to extract text from image"
-            )
+            raise HTTPException(status_code=500, detail="Failed to extract text from image")
 
         # Add to knowledge base if requested
         added_to_rag = False
@@ -97,9 +91,8 @@ async def upload_book_image(
             "text_length": len(extracted_text),
             "word_count": len(extracted_text.split()),
             "added_to_knowledge_base": added_to_rag,
-            "message": "Text extracted successfully! " + (
-                "Added to knowledge base." if added_to_rag else "Not added to knowledge base."
-            ),
+            "message": "Text extracted successfully! "
+            + ("Added to knowledge base." if added_to_rag else "Not added to knowledge base."),
         }
 
     except HTTPException:
@@ -116,7 +109,7 @@ async def upload_book_pdf(
     category: str = Form("general", description="Category"),
     max_pages: int = Form(50, description="Maximum pages to process"),
     add_to_knowledge_base: bool = Form(True),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Upload a PDF book, extract text, and optionally add to knowledge base.
 
@@ -132,11 +125,8 @@ async def upload_book_pdf(
     """
     try:
         # Validate file type
-        if not file.content_type == 'application/pdf':
-            raise HTTPException(
-                status_code=400,
-                detail="Only PDF files are supported"
-            )
+        if not file.content_type == "application/pdf":
+            raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
         # Save uploaded file
         file_path = UPLOAD_DIR / f"{file.filename}"
@@ -151,8 +141,7 @@ async def upload_book_pdf(
 
         if pdf_data.get("error"):
             raise HTTPException(
-                status_code=500,
-                detail=f"Failed to process PDF: {pdf_data['error']}"
+                status_code=500, detail=f"Failed to process PDF: {pdf_data['error']}"
             )
 
         full_text = pdf_data.get("full_text", "")
@@ -187,9 +176,8 @@ async def upload_book_pdf(
             "word_count": len(full_text.split()),
             "added_to_knowledge_base": added_to_rag,
             "preview": full_text[:500] + "..." if full_text else "",
-            "message": f"Extracted {pdf_data.get('total_pages', 0)} pages! " + (
-                "Added to knowledge base." if added_to_rag else ""
-            ),
+            "message": f"Extracted {pdf_data.get('total_pages', 0)} pages! "
+            + ("Added to knowledge base." if added_to_rag else ""),
         }
 
     except HTTPException:
@@ -205,7 +193,7 @@ async def add_text_directly(
     text: str = Form(..., description="Islamic text content"),
     category: str = Form("general", description="Category"),
     source: str = Form("User input", description="Source/reference"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Add Islamic text directly to the knowledge base without file upload.
 
@@ -220,10 +208,7 @@ async def add_text_directly(
     """
     try:
         if len(text.strip()) < 50:
-            raise HTTPException(
-                status_code=400,
-                detail="Text must be at least 50 characters"
-            )
+            raise HTTPException(status_code=400, detail="Text must be at least 50 characters")
 
         # Add to knowledge base
         rag = MalikiFiqhRAG()
@@ -239,10 +224,7 @@ async def add_text_directly(
         )
 
         if not success:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to add to knowledge base"
-            )
+            raise HTTPException(status_code=500, detail="Failed to add to knowledge base")
 
         return {
             "status": "success",
@@ -261,7 +243,7 @@ async def add_text_directly(
 
 
 @router.get("/knowledge-base/stats", summary="Get knowledge base statistics")
-async def get_knowledge_base_stats() -> Dict[str, Any]:
+async def get_knowledge_base_stats() -> dict[str, Any]:
     """
     Get statistics about the Maliki fiqh knowledge base.
 
@@ -287,7 +269,7 @@ async def search_knowledge_base(
     query: str = Form(..., description="Search query"),
     n_results: int = Form(3, description="Number of results"),
     category: str = Form(None, description="Filter by category"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Search the Maliki fiqh knowledge base.
 
@@ -317,4 +299,3 @@ async def search_knowledge_base(
     except Exception as e:
         logger.error(f"Error searching knowledge base: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-

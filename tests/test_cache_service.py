@@ -4,8 +4,9 @@ Comprehensive tests for Cache Service.
 Tests both in-memory and Redis caching functionality.
 """
 
+from typing import Any
+
 import pytest
-from typing import Any, Dict
 
 from src.services.cache_service import CacheService, cached, get_cache_service
 
@@ -138,7 +139,7 @@ class TestCacheService:
         for key, value in test_cases:
             await cache.set(key, value)
             retrieved = await cache.get(key)
-            
+
             # Sets need special handling for comparison
             if isinstance(value, set):
                 assert set(retrieved) == value
@@ -188,7 +189,7 @@ class TestCachedDecorator:
         call_count = 0
 
         @cached(prefix="location", ttl=60)
-        async def get_location(city: str, country: str = "USA") -> Dict[str, str]:
+        async def get_location(city: str, country: str = "USA") -> dict[str, str]:
             nonlocal call_count
             call_count += 1
             return {"city": city, "country": country}
@@ -240,15 +241,16 @@ class TestCachedDecorator:
     @pytest.mark.asyncio
     async def test_cached_decorator_with_dict_return(self):
         """Test caching complex dictionary returns."""
+
         @cached(prefix="prayer", ttl=86400)
-        async def get_prayer_times(lat: float, lon: float) -> Dict[str, Any]:
+        async def get_prayer_times(lat: float, lon: float) -> dict[str, Any]:
             return {
                 "fajr": "05:30",
                 "dhuhr": "12:15",
                 "asr": "15:45",
                 "maghrib": "18:30",
                 "isha": "20:00",
-                "location": {"lat": lat, "lon": lon}
+                "location": {"lat": lat, "lon": lon},
             }
 
         # First call
@@ -262,13 +264,14 @@ class TestCachedDecorator:
     @pytest.mark.asyncio
     async def test_cached_decorator_custom_key_builder(self):
         """Test cached decorator with custom key builder."""
+
         def custom_key_builder(user_id: int, *args, **kwargs) -> str:
             return f"user:{user_id}"
 
         call_count = 0
 
         @cached(prefix="user_data", ttl=60, key_builder=custom_key_builder)
-        async def get_user_data(user_id: int, fields: list = None) -> Dict:
+        async def get_user_data(user_id: int, fields: list = None) -> dict:
             nonlocal call_count
             call_count += 1
             return {"id": user_id, "fields": fields}
@@ -290,6 +293,7 @@ class TestCacheIntegration:
     async def test_cache_ttl_expiration(self):
         """Test that cache entries expire after TTL."""
         import asyncio
+
         cache = CacheService()
 
         # Set with 1 second TTL
@@ -312,6 +316,7 @@ class TestCacheIntegration:
     async def test_concurrent_cache_access(self):
         """Test concurrent cache access."""
         import asyncio
+
         cache = CacheService()
 
         async def worker(worker_id: int) -> str:
@@ -328,10 +333,7 @@ class TestCacheIntegration:
             assert result == f"value_{i}"
 
 
-@pytest.mark.skipif(
-    not pytest.importorskip("redis"),
-    reason="Redis not installed"
-)
+@pytest.mark.skipif(not pytest.importorskip("redis"), reason="Redis not installed")
 class TestRedisIntegration:
     """Tests that require Redis to be available."""
 
@@ -371,4 +373,3 @@ class TestRedisIntegration:
                 # Other key should still exist (may be None if only in Redis)
         finally:
             await cache.disconnect_redis()
-

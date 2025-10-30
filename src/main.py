@@ -7,26 +7,25 @@ RAG-enhanced responses using Google Gemini and Qdrant vector database.
 
 import uuid
 from contextlib import asynccontextmanager
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
+from slowapi.errors import RateLimitExceeded
 
 from .config import settings
 from .middleware.rate_limiting import limiter, rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 from .routers import (
-    hadith_router,
-    quran_router,
-    prayer_times_router,
     ai_router,
-    upload_router,
+    hadith_router,
+    prayer_times_router,
+    quran_router,
     settings_router,
+    upload_router,
 )
-
 
 # Configure logger
 logger.add(
@@ -48,18 +47,19 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Using Gemini model: {settings.gemini_model}")
-    logger.info(f"RAG System: Maliki Fiqh with Qdrant Vector DB")
-    
+    logger.info("RAG System: Maliki Fiqh with Qdrant Vector DB")
+
     # Initialize cache service
     from .services.cache_service import get_cache_service
+
     cache = get_cache_service()
     await cache.connect_redis()
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Al-Muwatta")
-    
+
     # Disconnect cache service
     await cache.disconnect_redis()
 
@@ -172,6 +172,7 @@ app.add_middleware(
 # Add compression middleware for better performance
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+
 # Add request ID middleware for request tracking
 @app.middleware("http")
 async def add_request_id_middleware(request: Request, call_next):
@@ -187,8 +188,7 @@ async def add_request_id_middleware(request: Request, call_next):
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Handle all unhandled exceptions with structured error response."""
-    import traceback
-    
+
     # Log full error details for debugging
     logger.error(
         f"Unhandled exception: {exc}",
@@ -199,7 +199,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "request_id": getattr(request.state, "request_id", None),
         },
     )
-    
+
     # Prepare error detail - sanitize in production
     if settings.debug:
         error_detail = {
@@ -212,7 +212,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "error": "Internal server error",
             "detail": "An error occurred. Please try again later.",
         }
-    
+
     return JSONResponse(
         status_code=500,
         content=error_detail,
@@ -230,7 +230,7 @@ app.include_router(settings_router)
 
 # Root endpoint
 @app.get("/", tags=["Root"])
-async def root() -> Dict[str, str]:
+async def root() -> dict[str, str]:
     """
     API root endpoint with welcome message.
 
@@ -249,7 +249,7 @@ async def root() -> Dict[str, str]:
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
-async def health_check() -> Dict[str, Any]:
+async def health_check() -> dict[str, Any]:
     """
     Comprehensive health check endpoint.
 
@@ -257,29 +257,32 @@ async def health_check() -> Dict[str, Any]:
         Service health status with cache, database, and external API checks
     """
     from .services.cache_service import get_cache_service
-    
+
     health_status = {
         "status": "healthy",
         "app_name": settings.app_name,
         "version": settings.app_version,
     }
-    
+
     # Check cache service
     try:
         cache = get_cache_service()
         cache_stats = cache.get_stats()
         health_status["cache"] = {
-            "status": "healthy" if cache.redis_enabled or cache_stats["memory_cache_size"] > 0 else "degraded",
+            "status": "healthy"
+            if cache.redis_enabled or cache_stats["memory_cache_size"] > 0
+            else "degraded",
             "redis_enabled": cache.redis_enabled,
             "memory_cache_size": cache_stats["memory_cache_size"],
         }
     except Exception as e:
         health_status["cache"] = {"status": "unhealthy", "error": str(e)}
         health_status["status"] = "degraded"
-    
+
     # Check external APIs (quick ping test)
     try:
         import httpx
+
         async with httpx.AsyncClient(timeout=5.0) as client:
             # Quick health check - try to reach external APIs
             health_status["external_apis"] = {
@@ -289,13 +292,13 @@ async def health_check() -> Dict[str, Any]:
             }
     except Exception as e:
         health_status["external_apis"] = {"status": "check_failed", "error": str(e)}
-    
+
     return health_status
 
 
 # API info endpoint
 @app.get("/api/v1/info", tags=["Info"])
-async def api_info() -> Dict[str, Any]:
+async def api_info() -> dict[str, Any]:
     """
     Get API information and statistics.
 
@@ -330,4 +333,3 @@ if __name__ == "__main__":
         reload=settings.debug,
         log_level=settings.log_level.lower(),
     )
-

@@ -5,6 +5,7 @@ This module tests the GeminiService integration with Google's Gemini API.
 """
 
 import pytest
+
 from src.services import GeminiService
 
 
@@ -23,9 +24,7 @@ class TestGeminiService:
         """Test basic content generation."""
         service = GeminiService()
 
-        content = await service.generate_content(
-            "Explain the importance of Salah in one sentence."
-        )
+        content = await service.generate_content("Explain the importance of Salah in one sentence.")
 
         assert content is not None
         assert isinstance(content, str)
@@ -57,8 +56,7 @@ class TestGeminiService:
         assert isinstance(answer, str)
         # Should mention core pillars
         assert any(
-            keyword in answer.lower()
-            for keyword in ["shahada", "salah", "zakat", "sawm", "hajj"]
+            keyword in answer.lower() for keyword in ["shahada", "salah", "zakat", "sawm", "hajj"]
         )
 
     @pytest.mark.asyncio
@@ -91,4 +89,3 @@ class TestGeminiService:
         assert translation is not None
         assert isinstance(translation, str)
         assert len(translation) > 0
-

@@ -7,13 +7,13 @@ before full scraping from primary sources is configured.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 
 class HanafiFiqhScraper:
     """Curated predefined texts for Hanafi fiqh."""
 
-    def get_predefined_texts(self) -> List[Dict[str, Any]]:
+    def get_predefined_texts(self) -> list[dict[str, Any]]:
         """Return a small curated set of foundational Hanafi topics.
 
         The intent is to seed the vector store; expand with proper scraping next.
@@ -62,5 +62,3 @@ class HanafiFiqhScraper:
                 "references": ["Al-Hidaya", "Radd al-Muhtar"],
             },
         ]
-
-

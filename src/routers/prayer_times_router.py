@@ -4,12 +4,11 @@ Prayer Times API Router.
 This router provides endpoints for prayer times, Islamic calendar, and related features.
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query
-from loguru import logger
 
 from ..api_clients import PrayerTimesAPIClient
-from ..models.schemas import PrayerTimesRequest, PrayerTimesResponse
 
 router = APIRouter(prefix="/api/v1/prayer-times", tags=["Prayer Times"])
 
@@ -20,7 +19,7 @@ async def get_prayer_timings(
     longitude: float = Query(..., description="Location longitude", ge=-180, le=180),
     method: int = Query(2, description="Calculation method", ge=1, le=13),
     date: str = Query(None, description="Date in DD-MM-YYYY format"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get prayer times for a specific location and date.
 
@@ -54,7 +53,7 @@ async def get_prayer_timings_by_city(
     country: str = Query(..., description="Country name or ISO code"),
     method: int = Query(2, description="Calculation method"),
     date: str = Query(None, description="Date in DD-MM-YYYY format"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get prayer times by city and country.
 
@@ -93,7 +92,7 @@ async def get_prayer_timings_by_address(
     address: str = Query(..., description="Full address"),
     method: int = Query(2, description="Calculation method"),
     date: str = Query(None, description="Date in DD-MM-YYYY format"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get prayer times by address (automatically geocoded).
 
@@ -128,7 +127,7 @@ async def get_prayer_calendar(
     month: int = Query(..., description="Month (1-12)", ge=1, le=12),
     year: int = Query(..., description="Year"),
     method: int = Query(2, description="Calculation method"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get prayer times calendar for an entire month.
 
@@ -172,7 +171,7 @@ async def get_prayer_calendar_by_city(
     month: int = Query(..., description="Month (1-12)", ge=1, le=12),
     year: int = Query(..., description="Year"),
     method: int = Query(2, description="Calculation method"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get prayer times calendar for a city.
 
@@ -211,7 +210,7 @@ async def get_prayer_calendar_by_city(
 
 
 @router.get("/date/current", summary="Get current date")
-async def get_current_date() -> Dict[str, Any]:
+async def get_current_date() -> dict[str, Any]:
     """
     Get current Gregorian and Hijri dates.
 
@@ -238,7 +237,7 @@ async def convert_gregorian_to_hijri(
     day: int = Query(..., description="Day", ge=1, le=31),
     month: int = Query(..., description="Month", ge=1, le=12),
     year: int = Query(..., description="Year"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Convert a Gregorian date to Hijri.
 
@@ -271,7 +270,7 @@ async def convert_hijri_to_gregorian(
     day: int = Query(..., description="Day", ge=1, le=30),
     month: int = Query(..., description="Hijri month", ge=1, le=12),
     year: int = Query(..., description="Hijri year"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Convert a Hijri date to Gregorian.
 
@@ -303,7 +302,7 @@ async def convert_hijri_to_gregorian(
 async def get_qibla_direction(
     latitude: float = Query(..., description="Location latitude"),
     longitude: float = Query(..., description="Location longitude"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get Qibla direction for a specific location.
 
@@ -331,7 +330,7 @@ async def get_qibla_direction(
 
 
 @router.get("/asma-al-husna", summary="Get the 99 Names of Allah")
-async def get_asma_al_husna() -> List[Dict[str, Any]]:
+async def get_asma_al_husna() -> list[dict[str, Any]]:
     """
     Get the 99 Names of Allah (Asma Al-Husna).
 
@@ -348,4 +347,3 @@ async def get_asma_al_husna() -> List[Dict[str, Any]]:
             )
 
         return names
-

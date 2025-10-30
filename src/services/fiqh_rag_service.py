@@ -13,17 +13,17 @@ Design goals:
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Optional, Tuple
-
 import unicodedata
 import uuid
+from collections.abc import Iterable
+from typing import Any
+
 from loguru import logger
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, PointStruct, VectorParams
 from sentence_transformers import SentenceTransformer
 
-
-MADHAB_KEYS: Tuple[str, ...] = ("maliki", "hanafi", "shafii", "hanbali")
+MADHAB_KEYS: tuple[str, ...] = ("maliki", "hanafi", "shafii", "hanbali")
 
 
 def _strip_diacritics(text: str) -> str:
@@ -38,7 +38,7 @@ def _strip_diacritics(text: str) -> str:
     return "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn")
 
 
-def normalize_madhab_name(name: str) -> Optional[str]:
+def normalize_madhab_name(name: str) -> str | None:
     """Normalize various inputs (English/Arabic/Case) to canonical madhab key.
 
     Accepted inputs include English and Arabic names:
@@ -130,7 +130,7 @@ class FiqhRAG:
     # ---------------------------
     # Ingestion
     # ---------------------------
-    def add_document(self, text: str, metadata: Dict[str, Any]) -> bool:
+    def add_document(self, text: str, metadata: dict[str, Any]) -> bool:
         """Add a document to the appropriate madhab collection.
 
         Required metadata keys: 'madhab'. Optional (recommended):
@@ -160,7 +160,9 @@ class FiqhRAG:
             )
 
             self.client.upsert(collection_name=collection_name, points=[point])
-            logger.info(f"✅ Added document to {collection_name}: {metadata.get('topic', 'Unknown')}")
+            logger.info(
+                f"✅ Added document to {collection_name}: {metadata.get('topic', 'Unknown')}"
+            )
             return True
         except Exception as exc:
             logger.error(f"Error adding document: {exc}")
@@ -173,10 +175,10 @@ class FiqhRAG:
         self,
         query: str,
         n_results: int = 3,
-        madhabs: Optional[Iterable[str]] = None,
-        category_filter: Optional[str] = None,
+        madhabs: Iterable[str] | None = None,
+        category_filter: str | None = None,
         score_threshold: float = 0.5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search across one or more madhab collections and merge results.
 
         Args:
@@ -204,7 +206,7 @@ class FiqhRAG:
             if category_filter:
                 query_filter = {"must": [{"key": "category", "match": {"value": category_filter}}]}
 
-            per_collection_results: List[Tuple[str, Any]] = []
+            per_collection_results: list[tuple[str, Any]] = []
             for key in selected:
                 cname = collection_for_madhab(key)
                 try:
@@ -222,7 +224,7 @@ class FiqhRAG:
                     continue
 
             # Merge globally by score desc; stable tiebreak by (madhab, id)
-            merged: List[Dict[str, Any]] = []
+            merged: list[dict[str, Any]] = []
             per_collection_results.sort(
                 key=lambda t: (
                     float(getattr(t[1], "score", 0.0) or 0.0),
@@ -268,14 +270,14 @@ class FiqhRAG:
         self,
         query: str,
         max_context_length: int = 2000,
-        madhabs: Optional[Iterable[str]] = None,
+        madhabs: Iterable[str] | None = None,
     ) -> str:
         """Build formatted, citation-ready context across selected madhabs."""
         results = self.search(query, n_results=5, madhabs=madhabs, score_threshold=0.3)
         if not results:
             return ""
 
-        parts: List[str] = []
+        parts: list[str] = []
         total_len = 0
         for i, r in enumerate(results, 1):
             meta = r.get("metadata", {})
@@ -298,9 +300,9 @@ class FiqhRAG:
     # ---------------------------
     # Monitoring/Stats
     # ---------------------------
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Return per-collection document counts and model metadata."""
-        stats: Dict[str, Any] = {
+        stats: dict[str, Any] = {
             "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2",
             "embedding_dimension": self.embedding_dim,
             "vector_database": "Qdrant",
@@ -326,7 +328,7 @@ class FiqhRAG:
 
 
 # Singleton convenience (optional)
-_fiqh_rag_singleton: Optional[FiqhRAG] = None
+_fiqh_rag_singleton: FiqhRAG | None = None
 
 
 def get_fiqh_rag() -> FiqhRAG:
@@ -334,5 +336,3 @@ def get_fiqh_rag() -> FiqhRAG:
     if _fiqh_rag_singleton is None:
         _fiqh_rag_singleton = FiqhRAG()
     return _fiqh_rag_singleton
-
-

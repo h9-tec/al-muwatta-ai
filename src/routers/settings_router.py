@@ -5,32 +5,34 @@ Allows users to select provider, input API keys, and choose models.
 Also includes cache management and statistics.
 """
 
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, Body
-from pydantic import BaseModel
-from loguru import logger
+from typing import Any
 
-from ..services.multi_llm_service import MultiLLMService
+from fastapi import APIRouter, Body, HTTPException
+from loguru import logger
+from pydantic import BaseModel
+
+from ..config import settings
 from ..services import get_fiqh_rag
 from ..services.cache_service import get_cache_service
-from ..config import settings
+from ..services.multi_llm_service import MultiLLMService
 
 router = APIRouter(prefix="/api/v1/settings", tags=["Settings"])
 
 
 class ProviderConfig(BaseModel):
     """Provider configuration model."""
+
     provider: str
-    api_key: Optional[str] = None
-    model: Optional[str] = None
+    api_key: str | None = None
+    model: str | None = None
 
 
 class ProviderModelsRequest(BaseModel):
-    api_key: Optional[str] = None
+    api_key: str | None = None
 
 
 @router.get("/providers", summary="Get all available providers")
-async def get_providers() -> Dict[str, Any]:
+async def get_providers() -> dict[str, Any]:
     """
     Get list of all supported LLM providers.
 
@@ -50,8 +52,10 @@ async def get_providers() -> Dict[str, Any]:
 @router.post("/providers/{provider}/models", summary="List models for provider")
 async def list_provider_models(
     provider: str,
-    payload: Optional[ProviderModelsRequest] = Body(default=None, description="Optional API key payload"),
-) -> Dict[str, Any]:
+    payload: ProviderModelsRequest | None = Body(
+        default=None, description="Optional API key payload"
+    ),
+) -> dict[str, Any]:
     """
     Fetch all available models from a provider.
 
@@ -67,7 +71,7 @@ async def list_provider_models(
         provided_key = payload.api_key if (payload and payload.api_key) else None
         service = MultiLLMService(provider=provider, api_key=provided_key)
         models = await service.list_available_models()
-        
+
         return {
             "provider": provider,
             "models_count": len(models),
@@ -86,7 +90,7 @@ async def test_provider_connection(
     provider: str = Body(..., description="Provider name"),
     api_key: str = Body(None, description="API key"),
     model: str = Body(None, description="Model to test"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Test connection to a provider and generate sample text.
 
@@ -100,17 +104,14 @@ async def test_provider_connection(
     """
     try:
         service = MultiLLMService(provider=provider, api_key=api_key)
-        
+
         # Get models if not specified
         if not model:
             models = await service.list_available_models()
             if not models:
-                raise HTTPException(
-                    status_code=404,
-                    detail="No models available"
-                )
-            model = models[0]['id']
-        
+                raise HTTPException(status_code=404, detail="No models available")
+            model = models[0]["id"]
+
         # Test generation
         test_prompt = "Say 'Connection successful' in one sentence."
         response = await service.generate(
@@ -119,33 +120,27 @@ async def test_provider_connection(
             temperature=0.5,
             max_tokens=50,
         )
-        
+
         if response:
             return {
                 "status": "success",
                 "provider": provider,
                 "model": model,
                 "test_response": response,
-                "message": "✅ Connection successful!"
+                "message": "✅ Connection successful!",
             }
         else:
-            raise HTTPException(
-                status_code=500,
-                detail="No response from model"
-            )
+            raise HTTPException(status_code=500, detail="No response from model")
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Connection test failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Connection failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
 
 
 @router.get("/ollama/status", summary="Check Ollama server status")
-async def check_ollama_status() -> Dict[str, Any]:
+async def check_ollama_status() -> dict[str, Any]:
     """
     Check if Ollama server is running and list installed models.
 
@@ -154,24 +149,25 @@ async def check_ollama_status() -> Dict[str, Any]:
     """
     try:
         import ollama
+
         client = ollama.Client()
-        
+
         # Try to list models
         models_response = client.list()
-        models = models_response.get('models', [])
-        
+        models = models_response.get("models", [])
+
         return {
             "status": "running",
             "models_installed": len(models),
             "models": [
                 {
-                    'name': m['name'],
-                    'size': m.get('size', 0),
-                    'modified': m.get('modified_at', ''),
+                    "name": m["name"],
+                    "size": m.get("size", 0),
+                    "modified": m.get("modified_at", ""),
                 }
                 for m in models
             ],
-            "message": "✅ Ollama is running"
+            "message": "✅ Ollama is running",
         }
 
     except Exception as e:
@@ -187,7 +183,7 @@ async def check_ollama_status() -> Dict[str, Any]:
 @router.post("/ollama/pull-model", summary="Download Ollama model")
 async def pull_ollama_model(
     model_name: str = Body(..., description="Model to download (e.g., qwen2.5:7b)"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Download a model from Ollama registry.
 
@@ -199,32 +195,30 @@ async def pull_ollama_model(
     """
     try:
         import ollama
+
         client = ollama.Client()
-        
+
         logger.info(f"Pulling Ollama model: {model_name}")
-        
+
         # This will stream the download
         client.pull(model_name)
-        
+
         return {
             "status": "success",
             "model": model_name,
-            "message": f"✅ Model {model_name} downloaded successfully"
+            "message": f"✅ Model {model_name} downloaded successfully",
         }
 
     except Exception as e:
         logger.error(f"Failed to pull model: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Download failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
 
 @router.get("/cache/stats", summary="Get cache statistics")
-async def get_cache_statistics() -> Dict[str, Any]:
+async def get_cache_statistics() -> dict[str, Any]:
     """
     Get comprehensive cache statistics.
-    
+
     Returns:
         Cache performance metrics including:
         - Hit/miss rates
@@ -236,32 +230,31 @@ async def get_cache_statistics() -> Dict[str, Any]:
     try:
         cache = get_cache_service()
         stats = cache.get_stats()
-        
+
         return {
             "status": "success",
             "statistics": stats,
-            "message": f"Cache hit rate: {stats['hit_rate_percent']}%"
+            "message": f"Cache hit rate: {stats['hit_rate_percent']}%",
         }
-    
+
     except Exception as e:
         logger.error(f"Failed to get cache stats: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve cache statistics: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve cache statistics: {str(e)}"
         )
 
 
 @router.post("/cache/clear/{pattern}", summary="Clear cache by pattern")
-async def clear_cache_pattern(pattern: str) -> Dict[str, Any]:
+async def clear_cache_pattern(pattern: str) -> dict[str, Any]:
     """
     Clear all cache keys matching a pattern.
-    
+
     Args:
         pattern: Pattern to match (e.g., "prayer_times:*", "quran_*")
-    
+
     Returns:
         Number of keys cleared
-    
+
     Examples:
         - Clear all prayer times: /cache/clear/prayer_times:*
         - Clear all Quran data: /cache/clear/quran_*
@@ -270,49 +263,40 @@ async def clear_cache_pattern(pattern: str) -> Dict[str, Any]:
     try:
         cache = get_cache_service()
         deleted_count = await cache.clear_pattern(pattern)
-        
+
         return {
             "status": "success",
             "pattern": pattern,
             "keys_deleted": deleted_count,
-            "message": f"✅ Cleared {deleted_count} cache entries matching '{pattern}'"
+            "message": f"✅ Cleared {deleted_count} cache entries matching '{pattern}'",
         }
-    
+
     except Exception as e:
         logger.error(f"Failed to clear cache pattern '{pattern}': {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to clear cache: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
 
 
 @router.post("/cache/reset-stats", summary="Reset cache statistics")
-async def reset_cache_statistics() -> Dict[str, Any]:
+async def reset_cache_statistics() -> dict[str, Any]:
     """
     Reset all cache statistics counters to zero.
-    
+
     Returns:
         Success message
     """
     try:
         cache = get_cache_service()
         cache.reset_stats()
-        
-        return {
-            "status": "success",
-            "message": "✅ Cache statistics reset successfully"
-        }
-    
+
+        return {"status": "success", "message": "✅ Cache statistics reset successfully"}
+
     except Exception as e:
         logger.error(f"Failed to reset cache stats: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to reset cache statistics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to reset cache statistics: {str(e)}")
 
 
 @router.get("/madhabs", summary="List available fiqh madhabs with collection stats")
-async def list_madhabs() -> Dict[str, Any]:
+async def list_madhabs() -> dict[str, Any]:
     """
     Return available schools and their Qdrant collection status/counts.
 
@@ -325,4 +309,3 @@ async def list_madhabs() -> Dict[str, Any]:
     except Exception as exc:
         logger.error(f"Failed to fetch madhab stats: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
-

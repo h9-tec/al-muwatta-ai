@@ -4,15 +4,16 @@ Pytest configuration and fixtures for testing.
 This module provides common fixtures and configuration for all tests.
 """
 
+import asyncio
+from collections.abc import AsyncGenerator
+
 import pytest
 import pytest_asyncio
-import asyncio
-from typing import AsyncGenerator
 
 from src.api_clients import (
     HadithAPIClient,
-    QuranAPIClient,
     PrayerTimesAPIClient,
+    QuranAPIClient,
 )
 
 
@@ -46,4 +47,3 @@ async def prayer_times_client() -> AsyncGenerator[PrayerTimesAPIClient, None]:
     client = PrayerTimesAPIClient()
     yield client
     await client.close()
-

@@ -4,19 +4,18 @@ Hadith API Router.
 This router provides endpoints for accessing and searching Hadith collections.
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query
-from loguru import logger
 
 from ..api_clients import HadithAPIClient
 from ..services import GeminiService
-from ..models.schemas import HadithRequest, HadithResponse
 
 router = APIRouter(prefix="/api/v1/hadith", tags=["Hadith"])
 
 
 @router.get("/collections", summary="Get all Hadith collections")
-async def get_hadith_collections() -> List[Dict[str, Any]]:
+async def get_hadith_collections() -> list[dict[str, Any]]:
     """
     Retrieve all available Hadith collections.
 
@@ -32,7 +31,7 @@ async def get_hadith_collections() -> List[Dict[str, Any]]:
     "/collections/{collection_name}",
     summary="Get specific Hadith collection",
 )
-async def get_hadith_collection(collection_name: str) -> Dict[str, Any]:
+async def get_hadith_collection(collection_name: str) -> dict[str, Any]:
     """
     Retrieve information about a specific Hadith collection.
 
@@ -60,7 +59,7 @@ async def get_hadith_collection(collection_name: str) -> Dict[str, Any]:
 )
 async def get_books_from_collection(
     collection_name: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Retrieve all books from a specific Hadith collection.
 
@@ -84,7 +83,7 @@ async def get_hadiths_from_book(
     book_number: int,
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve Hadiths from a specific book.
 
@@ -116,7 +115,7 @@ async def get_hadith_by_number(
     hadith_number: int,
     explain: bool = Query(False, description="Get AI explanation"),
     language: str = Query("english", description="Explanation language"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a specific Hadith by number with optional AI explanation.
 
@@ -160,7 +159,7 @@ async def search_hadiths(
     collection_name: str = Query(None, description="Specific collection"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=50),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Search for Hadiths across collections or in a specific collection.
 
@@ -187,7 +186,7 @@ async def search_hadiths(
 async def get_random_hadith(
     explain: bool = Query(False, description="Get AI explanation"),
     language: str = Query("english", description="Explanation language"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get a random Hadith with optional AI explanation.
 
@@ -221,4 +220,3 @@ async def get_random_hadith(
             result["explanation_language"] = language
 
         return result
-

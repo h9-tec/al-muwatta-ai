@@ -4,7 +4,6 @@ Unified Local LLM Service supporting both Ollama and llama.cpp.
 This service allows switching between cloud (Gemini) and local (Ollama/llama.cpp) LLMs.
 """
 
-from typing import Optional
 from loguru import logger
 
 from ..config import settings
@@ -13,7 +12,7 @@ from ..config import settings
 class LocalLLMService:
     """
     Unified service for local LLM inference.
-    
+
     Supports:
     - Ollama (preferred - easy to use)
     - llama.cpp (for advanced users)
@@ -46,6 +45,7 @@ class LocalLLMService:
         """Initialize Ollama backend."""
         try:
             from .ollama_service import OllamaService
+
             self.service = OllamaService(model=model)
             logger.info(f"✅ Using Ollama with model: {model}")
         except ImportError:
@@ -56,7 +56,7 @@ class LocalLLMService:
         """Initialize llama.cpp backend."""
         try:
             from llama_cpp import Llama
-            
+
             self.service = Llama(
                 model_path=model_path,
                 n_ctx=4096,  # Context window
@@ -68,7 +68,7 @@ class LocalLLMService:
             logger.error("llama-cpp-python not installed. Run: pip install llama-cpp-python")
             raise
 
-    async def generate(self, prompt: str, temperature: float = 0.7) -> Optional[str]:
+    async def generate(self, prompt: str, temperature: float = 0.7) -> str | None:
         """
         Generate text using the configured backend.
 
@@ -88,8 +88,8 @@ class LocalLLMService:
                 temperature=temperature,
                 stop=["Human:", "User:"],
             )
-            return output['choices'][0]['text']
-        
+            return output["choices"][0]["text"]
+
         return None
 
 
@@ -104,17 +104,18 @@ def get_best_available_llm():
     # Try Gemini first
     if settings.gemini_api_key and settings.gemini_api_key != "your_key_here":
         from .gemini_service import GeminiService
+
         logger.info("Using Google Gemini (cloud)")
         return GeminiService()
-    
+
     # Try Ollama
     try:
         from .ollama_service import OllamaService
+
         logger.info("Using Ollama (local)")
         return OllamaService()
     except:
         pass
-    
+
     # Fallback to error
     raise RuntimeError("No LLM available. Install Ollama or set GEMINI_API_KEY")
-

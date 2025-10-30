@@ -4,12 +4,10 @@ Structured logging utilities.
 Provides structured logging with request context and correlation IDs.
 """
 
-import json
 import sys
-from datetime import datetime
-from typing import Any, Dict, Optional
-from loguru import logger
+from typing import Any
 
+from loguru import logger
 
 # Remove default handler
 logger.remove()
@@ -25,7 +23,7 @@ def setup_logging(
 ) -> None:
     """
     Configure structured logging.
-    
+
     Args:
         log_file: Path to log file
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
@@ -40,7 +38,7 @@ def setup_logging(
         level=log_level,
         colorize=True,
     )
-    
+
     # File handler with JSON serialization
     if serialize:
         logger.add(
@@ -64,14 +62,11 @@ def setup_logging(
 
 
 def log_with_context(
-    level: str,
-    message: str,
-    request_id: Optional[str] = None,
-    **context: Any
+    level: str, message: str, request_id: str | None = None, **context: Any
 ) -> None:
     """
     Log with structured context.
-    
+
     Args:
         level: Log level (debug, info, warning, error)
         message: Log message
@@ -82,27 +77,26 @@ def log_with_context(
     context_parts = []
     if request_id:
         context_parts.append(f"request_id={request_id}")
-    
+
     for key, value in context.items():
         context_parts.append(f"{key}={value}")
-    
+
     context_str = " | ".join(context_parts) if context_parts else ""
     full_message = f"{message} | {context_str}" if context_str else message
-    
+
     getattr(logger, level.lower())(full_message)
 
 
-def get_request_id(request: Optional[Any] = None) -> Optional[str]:
+def get_request_id(request: Any | None = None) -> str | None:
     """
     Get request ID from request state.
-    
+
     Args:
         request: FastAPI request object
-        
+
     Returns:
         Request ID or None
     """
     if request and hasattr(request.state, "request_id"):
         return request.state.request_id
     return None
-

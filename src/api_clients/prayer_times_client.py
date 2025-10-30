@@ -13,12 +13,12 @@ Implements intelligent caching:
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
-from .base_client import BaseAPIClient
 from ..config import settings
+from .base_client import BaseAPIClient
 
 if TYPE_CHECKING:
     from ..services.cache_service import cached
@@ -26,8 +26,9 @@ else:
     # Lazy import to avoid circular dependency
     def _get_cached():
         from ..services.cache_service import cached
+
         return cached
-    
+
     def cached(*args, **kwargs):
         """Lazy-loaded cached decorator."""
         actual_cached = _get_cached()
@@ -50,11 +51,11 @@ class PrayerTimesAPIClient(BaseAPIClient):
         latitude: float,
         longitude: float,
         method: int = 2,
-        date: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        date: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Get prayer times for a specific location and date.
-        
+
         Cached for 24 hours as prayer times change daily.
 
         Args:
@@ -106,8 +107,8 @@ class PrayerTimesAPIClient(BaseAPIClient):
         city: str,
         country: str,
         method: int = 2,
-        date: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        date: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Get prayer times by city and country.
 
@@ -145,8 +146,8 @@ class PrayerTimesAPIClient(BaseAPIClient):
         self,
         address: str,
         method: int = 2,
-        date: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        date: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Get prayer times by address (geocoded automatically).
 
@@ -185,7 +186,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
         month: int,
         year: int,
         method: int = 2,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get prayer times calendar for an entire month.
 
@@ -233,7 +234,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
         month: int,
         year: int,
         method: int = 2,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get prayer times calendar for a city for an entire month.
 
@@ -279,7 +280,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
         month: int,
         year: int,
         method: int = 2,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get prayer times calendar using Hijri dates.
 
@@ -321,7 +322,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
             logger.error(f"Failed to get Hijri calendar for {month}/{year}: {e}")
             return None
 
-    async def get_current_date(self) -> Optional[Dict[str, Any]]:
+    async def get_current_date(self) -> dict[str, Any] | None:
         """
         Get current Gregorian and Hijri dates.
 
@@ -346,7 +347,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
         day: int,
         month: int,
         year: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Convert Gregorian date to Hijri.
 
@@ -375,7 +376,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
         day: int,
         month: int,
         year: int,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Convert Hijri date to Gregorian.
 
@@ -404,7 +405,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
         self,
         latitude: float,
         longitude: float,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get Qibla direction for a specific location.
 
@@ -458,7 +459,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
             return None
 
     @cached(prefix="asma_al_husna", ttl=31536000)  # 365 days - static content
-    async def get_asma_al_husna(self) -> List[Dict[str, Any]]:
+    async def get_asma_al_husna(self) -> list[dict[str, Any]]:
         """
         Get the 99 Names of Allah (Asma Al-Husna).
 
@@ -488,4 +489,3 @@ class PrayerTimesAPIClient(BaseAPIClient):
             except Exception as fallback_error:
                 logger.error(f"Asma Al-Husna fallback failed: {fallback_error}")
                 return []
-

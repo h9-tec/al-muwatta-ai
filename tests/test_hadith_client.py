@@ -6,6 +6,7 @@ collection retrieval, book access, hadith fetching, and search capabilities.
 """
 
 import pytest
+
 from src.api_clients import HadithAPIClient
 
 
@@ -180,4 +181,3 @@ class TestHadithAPIClient:
         if page1["data"] and page2["data"]:
             # Verify pages are different
             assert page1["data"] != page2["data"]
-

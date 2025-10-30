@@ -8,22 +8,23 @@ documents ready for ingestion into `FiqhRAG`.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, Iterator, List
+from collections.abc import Iterable, Iterator
+from typing import Any
 
 from loguru import logger
 
 from .fiqh_scraper import MalikiFiqhScraper
 from .hanafi_scraper import HanafiFiqhScraper
-from .shafii_scraper import ShafiiFiqhScraper
 from .hanbali_scraper import HanbaliFiqhScraper
+from .shafii_scraper import ShafiiFiqhScraper
 
 
-def load_predefined_content() -> List[Dict[str, Any]]:
+def load_predefined_content() -> list[dict[str, Any]]:
     """Load curated content across all four madhabs.
 
     Returns list of dicts with keys: text, topic, madhab, category, source, references.
     """
-    all_docs: List[Dict[str, Any]] = []
+    all_docs: list[dict[str, Any]] = []
 
     scrapers = [
         ("maliki", MalikiFiqhScraper(), "get_predefined_maliki_texts"),
@@ -44,7 +45,7 @@ def load_predefined_content() -> List[Dict[str, Any]]:
     return all_docs
 
 
-def to_ingestion_stream(docs: Iterable[Dict[str, Any]]) -> Iterator[Dict[str, Any]]:
+def to_ingestion_stream(docs: Iterable[dict[str, Any]]) -> Iterator[dict[str, Any]]:
     """Normalize docs to ingestion items suitable for FiqhRAG.add_document()."""
     for d in docs:
         text = d.get("text", "").strip()
@@ -60,5 +61,3 @@ def to_ingestion_stream(docs: Iterable[Dict[str, Any]]) -> Iterator[Dict[str, An
                 "references": ",".join(d.get("references", [])),
             },
         }
-
-

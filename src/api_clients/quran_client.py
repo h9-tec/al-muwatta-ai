@@ -11,12 +11,12 @@ Implements aggressive caching:
 - Search results cached for 30 days
 """
 
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
-from .base_client import BaseAPIClient
 from ..config import settings
+from .base_client import BaseAPIClient
 
 if TYPE_CHECKING:
     from ..services.cache_service import cached
@@ -24,8 +24,9 @@ else:
     # Lazy import to avoid circular dependency
     def _get_cached():
         from ..services.cache_service import cached
+
         return cached
-    
+
     def cached(*args, **kwargs):
         """Lazy-loaded cached decorator."""
         actual_cached = _get_cached()
@@ -51,48 +52,14 @@ class QuranComAPIClient(BaseAPIClient):
     def __init__(self) -> None:
         super().__init__(base_url=self.QURAN_COM_BASE)
 
-    async def get_chapters(self) -> Optional[Dict[str, Any]]:
-        try:
-            response = await self.get("/chapters")
-            return response
-        except Exception as exc:
-            logger.error(f"Failed to fetch chapters from quran.com: {exc}")
-            return None
-
-    async def get_surah(self, surah_number: int, language: str = "ar") -> Optional[Dict[str, Any]]:
-        try:
-            params = {"language": language}
-            response = await self.get(f"/chapters/{surah_number}", params=params)
-            return response
-        except Exception as exc:
-            logger.error(f"Failed to fetch chapter {surah_number} from quran.com: {exc}")
-            return None
-
-    async def get_ayah(self, verse_key: str, language: str = "ar") -> Optional[Dict[str, Any]]:
-        try:
-            params = {"language": language}
-            response = await self.get("/verses/by_key", params={"key": verse_key, **params})
-            return response
-        except Exception as exc:
-            logger.error(f"Failed to fetch verse {verse_key} from quran.com: {exc}")
-            return None
-
-    async def search(self, query: str, size: int = 5) -> Optional[Dict[str, Any]]:
-        try:
-            response = await self.get("/search", params={"q": query, "size": size})
-            return response
-        except Exception as exc:
-            logger.error(f"Failed to search Quran.com for '{query}': {exc}")
-            return None
-
     @cached(prefix="quran_full", ttl=31536000)  # 365 days - static content
     async def get_full_quran(
         self,
         edition: str = "quran-uthmani",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get the complete Quran in specified edition.
-        
+
         Cached for 365 days as Quranic content never changes.
 
         Args:
@@ -122,7 +89,7 @@ class QuranComAPIClient(BaseAPIClient):
         self,
         surah_number: int,
         edition: str = "quran-uthmani",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get a specific Surah (chapter) by number.
 
@@ -169,7 +136,7 @@ class QuranComAPIClient(BaseAPIClient):
         self,
         ayah_reference: str,
         edition: str = "quran-uthmani",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get a specific Ayah (verse) by reference.
 
@@ -206,7 +173,7 @@ class QuranComAPIClient(BaseAPIClient):
         self,
         ayah_number: int,
         edition: str = "quran-uthmani",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get a specific Ayah by its absolute number in the Quran.
 
@@ -249,7 +216,7 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to get Ayah number {ayah_number}: {e}")
             return None
 
-    async def get_juz(self, juz_number: int, language: str = "ar") -> Optional[Dict[str, Any]]:
+    async def get_juz(self, juz_number: int, language: str = "ar") -> dict[str, Any] | None:
         try:
             response = await self.get(
                 f"/juzs/{juz_number}",
@@ -264,7 +231,7 @@ class QuranComAPIClient(BaseAPIClient):
         self,
         page_number: int,
         edition: str = "quran-uthmani",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get a specific page of the Quran.
 
@@ -297,9 +264,9 @@ class QuranComAPIClient(BaseAPIClient):
     @cached(prefix="quran_editions", ttl=31536000)  # 365 days - static content
     async def get_editions(
         self,
-        format_type: Optional[str] = None,
-        language: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        format_type: str | None = None,
+        language: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Get all available Quran editions/translations.
 
@@ -335,9 +302,9 @@ class QuranComAPIClient(BaseAPIClient):
     async def search_quran(
         self,
         query: str,
-        surah: Optional[int] = None,
+        surah: int | None = None,
         edition: str = "quran-uthmani",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Search for verses in the Quran.
 
@@ -377,8 +344,8 @@ class QuranComAPIClient(BaseAPIClient):
     async def get_surah_with_multiple_editions(
         self,
         surah_number: int,
-        editions: List[str],
-    ) -> Optional[Dict[str, Any]]:
+        editions: list[str],
+    ) -> dict[str, Any] | None:
         """
         Get a Surah with multiple editions/translations at once.
 
@@ -411,4 +378,3 @@ class QuranComAPIClient(BaseAPIClient):
         except Exception as e:
             logger.error(f"Failed to get Surah {surah_number} with multiple editions: {e}")
             return None
-

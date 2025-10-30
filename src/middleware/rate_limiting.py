@@ -4,10 +4,10 @@ Rate limiting middleware for FastAPI.
 Uses slowapi to implement rate limiting per IP address.
 """
 
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 from fastapi import Request
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from starlette.status import HTTP_429_TOO_MANY_REQUESTS
 
 from ..config import settings
@@ -27,7 +27,7 @@ def get_rate_limiter() -> Limiter:
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     """Custom handler for rate limit exceeded errors."""
     from fastapi.responses import JSONResponse
-    
+
     return JSONResponse(
         status_code=HTTP_429_TOO_MANY_REQUESTS,
         content={
@@ -37,4 +37,3 @@ def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
         },
         headers={"Retry-After": str(exc.retry_after)},
     )
-

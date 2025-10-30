@@ -5,15 +5,15 @@ This module provides a base class with retry logic, error handling,
 and logging capabilities.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
+
 import httpx
 from loguru import logger
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
-    retry_if_exception,
 )
 
 from ..config import settings
@@ -22,7 +22,7 @@ from ..config import settings
 class BaseAPIClient:
     """Base class for all API clients with common functionality."""
 
-    def __init__(self, base_url: str, timeout: int = None) -> None:
+    def __init__(self, base_url: str, timeout: int | None = None) -> None:
         """
         Initialize the base API client.
 
@@ -32,7 +32,7 @@ class BaseAPIClient:
         """
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout or settings.api_timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """
@@ -64,10 +64,10 @@ class BaseAPIClient:
         self,
         method: str,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         Make an HTTP request with retry logic and error handling.
 
@@ -120,9 +120,9 @@ class BaseAPIClient:
     async def get(
         self,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         Make a GET request.
 
@@ -139,9 +139,9 @@ class BaseAPIClient:
     async def post(
         self,
         endpoint: str,
-        data: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        data: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """
         Make a POST request.
 
@@ -163,4 +163,3 @@ class BaseAPIClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         await self.close()
-

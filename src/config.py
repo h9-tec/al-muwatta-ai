@@ -5,9 +5,6 @@ This module handles all application configuration including API keys,
 environment variables, and application settings.
 """
 
-import os
-from typing import Optional
-
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -29,14 +26,16 @@ class Settings(BaseSettings):
     )
     app_version: str = Field(default="1.0.0", description="Application version")
     debug: bool = Field(default=True, description="Debug mode")
-    app_base_url: Optional[str] = Field(default=None, description="Public base URL used for provider headers")
+    app_base_url: str | None = Field(
+        default=None, description="Public base URL used for provider headers"
+    )
 
     # LLM Configuration
     use_local_llm: bool = Field(
         default=False,
         description="Use local LLM (Ollama) instead of Gemini",
     )
-    
+
     # Google Gemini Configuration
     gemini_api_key: str = Field(
         default="",
@@ -46,7 +45,7 @@ class Settings(BaseSettings):
         default="gemini-2.0-flash-exp",
         description="Gemini model to use",
     )
-    
+
     # Ollama Configuration
     ollama_model: str = Field(
         default="qwen2.5:7b",
@@ -58,11 +57,11 @@ class Settings(BaseSettings):
     )
 
     # External API Keys / Toggles
-    sunnah_api_key: Optional[str] = Field(
+    sunnah_api_key: str | None = Field(
         default=None,
         description="API key for sunnah.com hadith API",
     )
-    muslim_salat_api_key: Optional[str] = Field(
+    muslim_salat_api_key: str | None = Field(
         default=None,
         description="Optional API key for MuslimSalat prayer times API",
     )
@@ -88,7 +87,7 @@ class Settings(BaseSettings):
     )
 
     # Redis Configuration
-    redis_url: Optional[str] = Field(
+    redis_url: str | None = Field(
         default=None,
         description="Redis connection URL for caching",
     )
@@ -114,4 +113,3 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
-

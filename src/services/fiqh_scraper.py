@@ -4,21 +4,20 @@ Maliki Fiqh Web Scraper.
 This module scrapes authentic Maliki fiqh resources from trusted sources.
 """
 
-from typing import List, Dict, Any, Optional
 import asyncio
-import json
 from pathlib import Path
+from typing import Any
+
+import html2text
 import httpx
 from bs4 import BeautifulSoup
-import html2text
 from loguru import logger
 from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
 
 try:
     from scrapers.comprehensive_maliki_scraper import (
-        SayfAlHaqqMalikiSpider,
         IIUMLawbaseMalikiSpider,
+        SayfAlHaqqMalikiSpider,
     )
 except ModuleNotFoundError:  # pragma: no cover
     import sys
@@ -28,8 +27,8 @@ except ModuleNotFoundError:  # pragma: no cover
     if str(ROOT) not in sys.path:
         sys.path.append(str(ROOT))
     from scrapers.comprehensive_maliki_scraper import (
-        SayfAlHaqqMalikiSpider,
         IIUMLawbaseMalikiSpider,
+        SayfAlHaqqMalikiSpider,
     )
 
 
@@ -73,7 +72,7 @@ class MalikiFiqhScraper:
         self,
         query: str = "maliki",
         limit: int = 50,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Scrape Maliki fiqh Q&A from IslamQA and similar sources.
 
@@ -126,8 +125,8 @@ class MalikiFiqhScraper:
     async def scrape_custom_url(
         self,
         url: str,
-        extract_selector: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        extract_selector: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Scrape content from a custom URL.
 
@@ -143,7 +142,7 @@ class MalikiFiqhScraper:
                 response = await client.get(url)
                 response.raise_for_status()
 
-                soup = BeautifulSoup(response.text, 'lxml')
+                soup = BeautifulSoup(response.text, "lxml")
 
                 # Extract main content
                 if extract_selector:
@@ -167,12 +166,12 @@ class MalikiFiqhScraper:
             logger.error(f"Error scraping {url}: {e}")
             return None
 
-    async def run_sayf_al_haqq_scraper(self) -> List[Dict[str, Any]]:
+    async def run_sayf_al_haqq_scraper(self) -> list[dict[str, Any]]:
         """Run Scrapy spider to collect Sayf al Haqq Maliki resources."""
         loop = asyncio.get_running_loop()
 
-        def _crawl() -> List[Dict[str, Any]]:
-            items: List[Dict[str, Any]] = []
+        def _crawl() -> list[dict[str, Any]]:
+            items: list[dict[str, Any]] = []
 
             settings = {
                 "LOG_ENABLED": False,
@@ -195,12 +194,12 @@ class MalikiFiqhScraper:
 
         return await loop.run_in_executor(None, _crawl)
 
-    async def run_iium_lawbase_scraper(self) -> List[Dict[str, Any]]:
+    async def run_iium_lawbase_scraper(self) -> list[dict[str, Any]]:
         """Run Scrapy spider to harvest IIUM Lawbase Maliki fiqh content."""
         loop = asyncio.get_running_loop()
 
-        def _crawl() -> List[Dict[str, Any]]:
-            items: List[Dict[str, Any]] = []
+        def _crawl() -> list[dict[str, Any]]:
+            items: list[dict[str, Any]] = []
 
             settings = {
                 "LOG_ENABLED": False,
@@ -223,7 +222,7 @@ class MalikiFiqhScraper:
 
         return await loop.run_in_executor(None, _crawl)
 
-    def get_predefined_maliki_texts(self) -> List[Dict[str, Any]]:
+    def get_predefined_maliki_texts(self) -> list[dict[str, Any]]:
         """
         Get predefined Maliki fiqh texts for immediate use.
 
@@ -445,4 +444,3 @@ Order must be followed - cannot skip to feeding without trying fasting first.
                 "references": ["Al-Risala", "Mukhtasar Khalil"],
             },
         ]
-

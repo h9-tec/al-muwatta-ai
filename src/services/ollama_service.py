@@ -4,11 +4,11 @@ Ollama Service for Local LLM Inference.
 This service provides an alternative to Google Gemini using locally-run LLMs.
 """
 
-from typing import Optional, Dict, Any
 from loguru import logger
 
 try:
     import ollama
+
     OLLAMA_AVAILABLE = True
 except ImportError:
     OLLAMA_AVAILABLE = False
@@ -30,7 +30,7 @@ class OllamaService:
 
         self.model = model
         self.client = ollama.Client()
-        
+
         try:
             # Test if model exists
             self.client.show(model)
@@ -44,7 +44,7 @@ class OllamaService:
         prompt: str,
         temperature: float = 0.7,
         max_tokens: int = 1000,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Generate content using local Ollama model.
 
@@ -66,16 +66,16 @@ class OllamaService:
                 model=self.model,
                 prompt=prompt,
                 options={
-                    'temperature': temperature,
-                    'num_predict': max_tokens,
-                }
+                    "temperature": temperature,
+                    "num_predict": max_tokens,
+                },
             )
-            
-            content = response.get('response', '')
+
+            content = response.get("response", "")
             if content:
                 logger.info("✅ Content generated with Ollama")
                 return content
-            
+
             logger.warning("No content generated")
             return None
 
@@ -87,7 +87,7 @@ class OllamaService:
         self,
         messages: list,
         temperature: float = 0.7,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Chat interface with conversation history.
 
@@ -106,12 +106,10 @@ class OllamaService:
         """
         try:
             response = self.client.chat(
-                model=self.model,
-                messages=messages,
-                options={'temperature': temperature}
+                model=self.model, messages=messages, options={"temperature": temperature}
             )
-            
-            return response.get('message', {}).get('content')
+
+            return response.get("message", {}).get("content")
 
         except Exception as e:
             logger.error(f"Ollama chat failed: {e}")
@@ -126,7 +124,7 @@ class OllamaService:
         """
         try:
             models = self.client.list()
-            return [m['name'] for m in models.get('models', [])]
+            return [m["name"] for m in models.get("models", [])]
         except Exception as e:
             logger.error(f"Failed to list models: {e}")
             return []
@@ -149,4 +147,3 @@ class OllamaService:
         except Exception as e:
             logger.error(f"Failed to pull model: {e}")
             return False
-

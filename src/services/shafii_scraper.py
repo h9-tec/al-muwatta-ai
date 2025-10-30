@@ -7,13 +7,13 @@ before full scraping from primary sources is configured.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 
 class ShafiiFiqhScraper:
     """Curated predefined texts for Shafi'i fiqh."""
 
-    def get_predefined_texts(self) -> List[Dict[str, Any]]:
+    def get_predefined_texts(self) -> list[dict[str, Any]]:
         """Return a small curated set of foundational Shafi'i topics."""
         return [
             {
@@ -56,5 +56,3 @@ class ShafiiFiqhScraper:
                 "references": ["Al-Umm", "Al-Majmu'"],
             },
         ]
-
-

@@ -6,7 +6,7 @@ prayer times retrieval, calendar access, date conversions, and Islamic features.
 """
 
 import pytest
-from datetime import datetime
+
 from src.api_clients import PrayerTimesAPIClient
 
 
@@ -333,4 +333,3 @@ class TestPrayerTimesAPIClient:
             assert client is not None
             timings = await client.get_timings(21.3891, 39.8579)
             assert timings is not None
-

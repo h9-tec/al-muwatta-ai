@@ -48,13 +48,26 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
     "B008",  # do not perform function calls in argument defaults
+    "B026",  # star-arg unpacking after keyword argument
+    "B904",  # raise from exception chaining (stylistic)
+    "PLR0911",  # too many return statements
+    "PLR0912",  # too many branches
     "PLR0913",  # too many arguments
     "PLR2004",  # magic value used in comparison
+    "PLW0603",  # global statement (acceptable for singletons)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # unused imports
-"tests/**/*.py" = ["ARG001", "PLR2004"]  # unused arguments, magic values in tests
+"tests/**/*.py" = ["ARG001", "ARG004", "PLR2004", "F841"]  # unused arguments/vars, magic values in tests
+"src/main.py" = ["ARG001", "F841"]  # FastAPI lifespan requires app param, unused client in health check
+"src/middleware/__init__.py" = ["ARG001"]  # Exception handlers require request param
+"src/middleware/rate_limiting.py" = ["ARG001"]  # Exception handlers require request param
+"src/services/dspy_rag_service.py" = ["ARG004"]  # DSPy metric signature requires example/trace params
+"src/services/fiqh_scraper.py" = ["ARG002", "F841"]  # Placeholder scraper with unused params
+"src/services/local_llm_service.py" = ["E722"]  # Bare except for optional import fallback
+"src/services/ocr_service.py" = ["ARG002", "F841"]  # Placeholder OCR service with unused params
+"src/utils/question_classifier.py" = ["ARG001"]  # category param reserved for future use
 
 [tool.ruff.format]
 quote-style = "double"

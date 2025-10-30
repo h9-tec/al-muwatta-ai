@@ -4,13 +4,12 @@ Quran API Router.
 This router provides endpoints for accessing Quranic verses, translations, and tafsir.
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query
-from loguru import logger
 
 from ..api_clients import QuranAPIClient, QuranComAPIClient
 from ..services import GeminiService
-from ..models.schemas import QuranVerseRequest, QuranVerseResponse
 
 router = APIRouter(prefix="/api/v1/quran", tags=["Quran"])
 
@@ -19,7 +18,7 @@ router = APIRouter(prefix="/api/v1/quran", tags=["Quran"])
 async def get_quran_editions(
     language: str = Query(None, description="Filter by language"),
     format_type: str = Query(None, description="Filter by format (text/audio)"),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Retrieve all available Quran editions and translations.
 
@@ -49,7 +48,7 @@ async def get_surah(
     edition: str = Query("quran-uthmani", description="Quran edition"),
     explain: bool = Query(False, description="Get AI tafsir for each verse"),
     language: str = Query("english", description="Explanation language"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a complete Surah with optional AI tafsir.
 
@@ -88,10 +87,12 @@ async def get_surah(
                     verse_number=ayah.get("numberInSurah", 0),
                     language=language,
                 )
-                explanations.append({
-                    "verse_number": ayah.get("numberInSurah"),
-                    "tafsir": tafsir,
-                })
+                explanations.append(
+                    {
+                        "verse_number": ayah.get("numberInSurah"),
+                        "tafsir": tafsir,
+                    }
+                )
 
             result["sample_tafsir"] = explanations
             result["tafsir_language"] = language
@@ -105,7 +106,7 @@ async def get_ayah(
     edition: str = Query("quran-uthmani", description="Quran edition"),
     explain: bool = Query(False, description="Get AI tafsir"),
     language: str = Query("english", description="Explanation language"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a specific Ayah by reference (e.g., '2:255' for Ayat al-Kursi).
 
@@ -151,7 +152,7 @@ async def get_ayah(
 async def get_juz(
     juz_number: int,
     edition: str = Query("quran-uthmani", description="Quran edition"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a specific Juz (part) of the Quran.
 
@@ -181,7 +182,7 @@ async def get_juz(
 async def get_page(
     page_number: int,
     edition: str = Query("quran-uthmani", description="Quran edition"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a specific page of the Quran.
 
@@ -212,7 +213,7 @@ async def search_quran(
     query: str = Query(..., description="Search query"),
     surah: int = Query(None, description="Limit to specific Surah"),
     edition: str = Query("quran-uthmani", description="Edition to search"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Search for verses in the Quran.
 
@@ -252,7 +253,7 @@ async def get_surah_multiple_editions(
         "quran-uthmani,en.sahih",
         description="Comma-separated edition identifiers",
     ),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a Surah with multiple editions/translations at once.
 
@@ -282,4 +283,3 @@ async def get_surah_multiple_editions(
             "editions": editions_list,
             "source": "alquran.cloud API",
         }
-

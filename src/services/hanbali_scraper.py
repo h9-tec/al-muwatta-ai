@@ -7,13 +7,13 @@ before full scraping from primary sources is configured.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 
 class HanbaliFiqhScraper:
     """Curated predefined texts for Hanbali fiqh."""
 
-    def get_predefined_texts(self) -> List[Dict[str, Any]]:
+    def get_predefined_texts(self) -> list[dict[str, Any]]:
         """Return a small curated set of foundational Hanbali topics."""
         return [
             {
@@ -27,7 +27,7 @@ class HanbaliFiqhScraper:
                     "upon sources; detailed rulings to be expanded with full ingestion."
                 ),
                 "source": "Hanbali Fiqh Compilation",
-                "references": ["Al-Mughni", "Al-Insaf", "Zad al-Mustaqni'"]
+                "references": ["Al-Mughni", "Al-Insaf", "Zad al-Mustaqni'"],
             },
             {
                 "id": "hanbali_wudu_1",
@@ -53,8 +53,6 @@ class HanbaliFiqhScraper:
                     "with references to relied-upon Hanbali manuals."
                 ),
                 "source": "Hanbali Fiqh Compilation",
-                "references": ["Al-Insaf", "Zad al-Mustaqni'"]
+                "references": ["Al-Insaf", "Zad al-Mustaqni'"],
             },
         ]
-
-

@@ -5,12 +5,10 @@ This service allows users to upload book images/PDFs and extract text
 to add to the Maliki fiqh knowledge base.
 """
 
-from typing import Optional, Dict, Any
-from pathlib import Path
-import base64
+from typing import Any
+
 from loguru import logger
 from PIL import Image
-import io
 
 # Note: DeepSeek-OCR requires transformers and torch
 # For production, you would load the model here:
@@ -54,7 +52,7 @@ class OCRService:
         self,
         image_path: str,
         language: str = "arabic",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Extract text from an image using OCR.
 
@@ -86,7 +84,7 @@ class OCRService:
             logger.error(f"Error extracting text from image: {e}")
             return None
 
-    async def _extract_with_deepseek(self, image: Image.Image) -> Optional[str]:
+    async def _extract_with_deepseek(self, image: Image.Image) -> str | None:
         """
         Extract text using DeepSeek-OCR model.
 
@@ -126,7 +124,7 @@ class OCRService:
         self,
         image: Image.Image,
         language: str = "arabic",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Fallback OCR using Tesseract or cloud service.
 
@@ -146,7 +144,7 @@ class OCRService:
             # 4. AWS Textract
 
             logger.info("Using fallback OCR (manual text extraction recommended)")
-            
+
             return """
 [OCR Placeholder]
 
@@ -166,7 +164,7 @@ For now, please manually paste the text from your book.
         self,
         pdf_path: str,
         max_pages: int = 50,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Process a PDF file and extract text.
 
@@ -189,11 +187,13 @@ For now, please manually paste the text from your book.
                 for i, page in enumerate(pdf.pages[:total_pages]):
                     text = page.extract_text()
                     if text:
-                        extracted_pages.append({
-                            "page_number": i + 1,
-                            "text": text,
-                            "word_count": len(text.split()),
-                        })
+                        extracted_pages.append(
+                            {
+                                "page_number": i + 1,
+                                "text": text,
+                                "word_count": len(text.split()),
+                            }
+                        )
 
                 logger.info(f"✅ Extracted text from {len(extracted_pages)} pages")
 
@@ -206,4 +206,3 @@ For now, please manually paste the text from your book.
         except Exception as e:
             logger.error(f"Error processing PDF: {e}")
             return {"error": str(e), "pages": []}
-
