@@ -10,7 +10,8 @@ pytest-mock==3.14.0
 ruff==0.7.4
 mypy==1.11.0
 types-redis==4.6.0
-types-cachetools==5.5.0
+# Pin to the published stub release for cachetools 5.5.0
+types-cachetools
 
 # Security
 bandit==1.7.9
