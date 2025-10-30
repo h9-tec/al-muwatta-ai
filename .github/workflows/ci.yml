@@ -23,6 +23,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
+    - name: Ensure cache directories exist
+      run: |
+        mkdir -p ~/.cache/pip
+        mkdir -p ~/.cache/huggingface ~/.cache/torch ~/.cache/transformers
+
     - name: Cache pip dependencies
       uses: actions/cache@v4
       with:
@@ -30,6 +35,17 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
+
+    - name: Cache HuggingFace/Transformers models
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/huggingface
+          ~/.cache/torch
+          ~/.cache/transformers
+        key: ${{ runner.os }}-hf-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-hf-
     
     - name: Install dependencies
       run: |
@@ -54,6 +70,8 @@ jobs:
       env:
         GEMINI_API_KEY: test_key
         USE_LOCAL_LLM: false
+        HUGGINGFACE_HUB_CACHE: /home/runner/.cache/huggingface
+        SENTENCE_TRANSFORMERS_HOME: /home/runner/.cache/transformers
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
@@ -95,7 +113,11 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+        cache-dependency-path: |
+          package-lock.json
+          frontend/package-lock.json
+          frontend/pnpm-lock.yaml
+          frontend/yarn.lock
     
     - name: Install frontend dependencies
       working-directory: ./frontend
