@@ -18,16 +18,16 @@ __all__ = [
 
 def __getattr__(name: str) -> Any:
     if name == "GeminiService":
-        from .gemini_service import GeminiService
+from .gemini_service import GeminiService
         return GeminiService
     if name == "MalikiFiqhRAG":
-        from .rag_service import MalikiFiqhRAG
+from .rag_service import MalikiFiqhRAG
         return MalikiFiqhRAG
     if name == "MalikiFiqhScraper":
-        from .fiqh_scraper import MalikiFiqhScraper
+from .fiqh_scraper import MalikiFiqhScraper
         return MalikiFiqhScraper
     if name == "MultiLLMService":
-        from .multi_llm_service import MultiLLMService
+from .multi_llm_service import MultiLLMService
         return MultiLLMService
     if name == "FiqhRAG":
         from .fiqh_rag_service import FiqhRAG
