@@ -11,7 +11,6 @@ from loguru import logger
 import asyncio
 
 from ..config import settings
-from .fiqh_rag_service import FiqhRAG
 from ..utils.question_classifier import (
     is_fiqh_question,
     get_response_instructions,
@@ -46,6 +45,8 @@ class GeminiService:
             self.rag = None
             if enable_rag:
                 try:
+                    # Lazy import to avoid heavy deps at import time
+                    from .fiqh_rag_service import FiqhRAG  # type: ignore
                     self.rag = FiqhRAG()
                     logger.info("✅ RAG system enabled for multi-madhab fiqh")
                 except Exception as rag_error:
