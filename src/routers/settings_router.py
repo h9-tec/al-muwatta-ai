@@ -2,6 +2,7 @@
 Settings Router for LLM Provider Configuration.
 
 Allows users to select provider, input API keys, and choose models.
+Also includes cache management and statistics.
 """
 
 from typing import Dict, Any, List, Optional
@@ -10,6 +11,7 @@ from pydantic import BaseModel
 from loguru import logger
 
 from ..services.multi_llm_service import MultiLLMService
+from ..services.cache_service import get_cache_service
 from ..config import settings
 
 router = APIRouter(prefix="/api/v1/settings", tags=["Settings"])
@@ -54,13 +56,15 @@ async def list_provider_models(
 
     Args:
         provider: Provider name (ollama, openrouter, groq, etc.)
-        api_key: API key for the provider
+        payload: Optional body containing `api_key` when the provider requires it
 
     Returns:
         List of available models
     """
     try:
-        service = MultiLLMService(provider=provider, api_key=payload.api_key if payload else api_key)
+        # Use API key only if provided via payload
+        provided_key = payload.api_key if (payload and payload.api_key) else None
+        service = MultiLLMService(provider=provider, api_key=provided_key)
         models = await service.list_available_models()
         
         return {
@@ -212,5 +216,96 @@ async def pull_ollama_model(
         raise HTTPException(
             status_code=500,
             detail=f"Download failed: {str(e)}"
+        )
+
+
+@router.get("/cache/stats", summary="Get cache statistics")
+async def get_cache_statistics() -> Dict[str, Any]:
+    """
+    Get comprehensive cache statistics.
+    
+    Returns:
+        Cache performance metrics including:
+        - Hit/miss rates
+        - Redis vs in-memory distribution
+        - Total requests served
+        - Error count
+        - Current cache sizes
+    """
+    try:
+        cache = get_cache_service()
+        stats = cache.get_stats()
+        
+        return {
+            "status": "success",
+            "statistics": stats,
+            "message": f"Cache hit rate: {stats['hit_rate_percent']}%"
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to get cache stats: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve cache statistics: {str(e)}"
+        )
+
+
+@router.post("/cache/clear/{pattern}", summary="Clear cache by pattern")
+async def clear_cache_pattern(pattern: str) -> Dict[str, Any]:
+    """
+    Clear all cache keys matching a pattern.
+    
+    Args:
+        pattern: Pattern to match (e.g., "prayer_times:*", "quran_*")
+    
+    Returns:
+        Number of keys cleared
+    
+    Examples:
+        - Clear all prayer times: /cache/clear/prayer_times:*
+        - Clear all Quran data: /cache/clear/quran_*
+        - Clear all cache: /cache/clear/*
+    """
+    try:
+        cache = get_cache_service()
+        deleted_count = await cache.clear_pattern(pattern)
+        
+        return {
+            "status": "success",
+            "pattern": pattern,
+            "keys_deleted": deleted_count,
+            "message": f"✅ Cleared {deleted_count} cache entries matching '{pattern}'"
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to clear cache pattern '{pattern}': {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to clear cache: {str(e)}"
+        )
+
+
+@router.post("/cache/reset-stats", summary="Reset cache statistics")
+async def reset_cache_statistics() -> Dict[str, Any]:
+    """
+    Reset all cache statistics counters to zero.
+    
+    Returns:
+        Success message
+    """
+    try:
+        cache = get_cache_service()
+        cache.reset_stats()
+        
+        return {
+            "status": "success",
+            "message": "✅ Cache statistics reset successfully"
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to reset cache stats: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to reset cache statistics: {str(e)}"
         )
 

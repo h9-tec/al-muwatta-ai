@@ -105,6 +105,12 @@ class Settings(BaseSettings):
         description="Cache time-to-live in seconds",
     )
 
+    # Security Configuration
+    allowed_origins: str = Field(
+        default="http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173",
+        description="Comma-separated list of allowed CORS origins",
+    )
+
 
 # Global settings instance
 settings = Settings()

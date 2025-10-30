@@ -24,6 +24,45 @@ def _safe_ascii(value: Optional[str], fallback: str) -> str:
         return cleaned
 
 
+def validate_api_key(provider: str, api_key: Optional[str]) -> Optional[str]:
+    """
+    Validate API key format and basic security checks.
+    
+    Args:
+        provider: Provider name
+        api_key: API key to validate
+    
+    Returns:
+        Sanitized API key if valid, None otherwise
+    """
+    if not api_key:
+        return None
+    
+    sanitized_key = api_key.strip()
+    
+    # Basic length check (most API keys are at least 10 chars)
+    if len(sanitized_key) < 10:
+        logger.warning(f"API key too short for provider {provider}")
+        return None
+    
+    # Check for common invalid patterns
+    invalid_patterns = [
+        "your_api_key",
+        "api_key_here",
+        "test_key",
+        "example",
+    ]
+    
+    api_key_lower = sanitized_key.lower()
+    for pattern in invalid_patterns:
+        if pattern in api_key_lower:
+            logger.warning(f"API key contains suspicious pattern: {pattern}")
+            return None
+    
+    # Return sanitized key
+    return sanitized_key
+
+
 class MultiLLMService:
     """Unified service supporting multiple LLM providers."""
 
@@ -67,9 +106,11 @@ class MultiLLMService:
         Args:
             provider: Provider name ('ollama', 'openrouter', 'groq', etc.)
             api_key: API key for the provider (if required)
+        
+        Raises:
+            ValueError: If provider is unknown or API key is invalid
         """
         self.provider = provider.lower()
-        self.api_key = api_key
         
         if self.provider not in self.PROVIDERS:
             raise ValueError(f"Unknown provider: {provider}")
@@ -77,9 +118,19 @@ class MultiLLMService:
         self.provider_info = self.PROVIDERS[self.provider]
         self.base_url = self.provider_info["base_url"]
         
-        # Check API key requirement
-        if self.provider_info["requires_api_key"] and not api_key:
-            logger.warning(f"{self.provider} requires an API key")
+        # Validate and sanitize API key if required
+        if self.provider_info["requires_api_key"]:
+            if not api_key:
+                raise ValueError(f"{self.provider} requires an API key")
+            
+            # Validate API key format
+            validated_key = validate_api_key(self.provider, api_key)
+            if not validated_key:
+                raise ValueError(f"Invalid API key format for {self.provider}")
+            
+            self.api_key = validated_key
+        else:
+            self.api_key = None
         
         logger.info(f"✅ Initialized {self.provider_info['name']}")
 

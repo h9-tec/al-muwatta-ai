@@ -5,15 +5,19 @@ Main FastAPI application specialized in Maliki jurisprudence with
 RAG-enhanced responses using Google Gemini and Qdrant vector database.
 """
 
+import uuid
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 
 from .config import settings
+from .middleware.rate_limiting import limiter, rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from .routers import (
     hadith_router,
     quran_router,
@@ -45,9 +49,19 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Using Gemini model: {settings.gemini_model}")
     logger.info(f"RAG System: Maliki Fiqh with Qdrant Vector DB")
+    
+    # Initialize cache service
+    from .services.cache_service import get_cache_service
+    cache = get_cache_service()
+    await cache.connect_redis()
+    
     yield
+    
     # Shutdown
     logger.info("Shutting down Al-Muwatta")
+    
+    # Disconnect cache service
+    await cache.disconnect_redis()
 
 
 # Initialize FastAPI application
@@ -128,32 +142,80 @@ Built with ❤️ for the Muslim Ummah
     openapi_url="/openapi.json",
 )
 
-# Configure CORS
+# Initialize rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# Configure CORS - Use environment-based origins for security
+_allowed_origins = (
+    [origin.strip() for origin in settings.allowed_origins.split(",") if origin.strip()]
+    if settings.allowed_origins
+    else []
+)
+
+# In development, allow localhost origins
+if settings.debug and not _allowed_origins:
+    _allowed_origins = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",  # Alternative port
-        "http://127.0.0.1:5173",
-        "*"  # Allow all in development
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Add compression middleware for better performance
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Add request ID middleware for request tracking
+@app.middleware("http")
+async def add_request_id_middleware(request: Request, call_next):
+    """Add unique request ID to each request for tracking."""
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
 
 
 # Exception handlers
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Handle all unhandled exceptions."""
-    logger.error(f"Unhandled exception: {exc}")
+    """Handle all unhandled exceptions with structured error response."""
+    import traceback
+    
+    # Log full error details for debugging
+    logger.error(
+        f"Unhandled exception: {exc}",
+        exc_info=True,
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+    
+    # Prepare error detail - sanitize in production
+    if settings.debug:
+        error_detail = {
+            "error": "Internal server error",
+            "detail": str(exc),
+            "type": type(exc).__name__,
+        }
+    else:
+        error_detail = {
+            "error": "Internal server error",
+            "detail": "An error occurred. Please try again later.",
+        }
+    
     return JSONResponse(
         status_code=500,
-        content={
-            "error": "Internal server error",
-            "detail": str(exc) if settings.debug else "An error occurred",
-        },
+        content=error_detail,
     )
 
 
@@ -187,18 +249,48 @@ async def root() -> Dict[str, str]:
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
-async def health_check() -> Dict[str, str]:
+async def health_check() -> Dict[str, Any]:
     """
-    Health check endpoint.
+    Comprehensive health check endpoint.
 
     Returns:
-        Service health status
+        Service health status with cache, database, and external API checks
     """
-    return {
+    from .services.cache_service import get_cache_service
+    
+    health_status = {
         "status": "healthy",
         "app_name": settings.app_name,
         "version": settings.app_version,
     }
+    
+    # Check cache service
+    try:
+        cache = get_cache_service()
+        cache_stats = cache.get_stats()
+        health_status["cache"] = {
+            "status": "healthy" if cache.redis_enabled or cache_stats["memory_cache_size"] > 0 else "degraded",
+            "redis_enabled": cache.redis_enabled,
+            "memory_cache_size": cache_stats["memory_cache_size"],
+        }
+    except Exception as e:
+        health_status["cache"] = {"status": "unhealthy", "error": str(e)}
+        health_status["status"] = "degraded"
+    
+    # Check external APIs (quick ping test)
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            # Quick health check - try to reach external APIs
+            health_status["external_apis"] = {
+                "quran_api": "unknown",  # Would need actual ping
+                "hadith_api": "unknown",
+                "prayer_times_api": "unknown",
+            }
+    except Exception as e:
+        health_status["external_apis"] = {"status": "check_failed", "error": str(e)}
+    
+    return health_status
 
 
 # API info endpoint

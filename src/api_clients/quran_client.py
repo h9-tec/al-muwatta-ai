@@ -4,14 +4,32 @@ Quran API Client for fetching Quranic verses, translations, and recitations.
 This client interfaces with:
 - api.alquran.cloud (free, comprehensive Quran API)
 - quran.com API (alternative)
+
+Implements aggressive caching:
+- Quranic content is static and never changes
+- All Quran data cached for 365 days (effectively permanent)
+- Search results cached for 30 days
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from loguru import logger
 
 from .base_client import BaseAPIClient
 from ..config import settings
+
+if TYPE_CHECKING:
+    from ..services.cache_service import cached
+else:
+    # Lazy import to avoid circular dependency
+    def _get_cached():
+        from ..services.cache_service import cached
+        return cached
+    
+    def cached(*args, **kwargs):
+        """Lazy-loaded cached decorator."""
+        actual_cached = _get_cached()
+        return actual_cached(*args, **kwargs)
 
 
 class QuranAPIClient(BaseAPIClient):
@@ -67,12 +85,15 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to search Quran.com for '{query}': {exc}")
             return None
 
+    @cached(prefix="quran_full", ttl=31536000)  # 365 days - static content
     async def get_full_quran(
         self,
         edition: str = "quran-uthmani",
     ) -> Optional[Dict[str, Any]]:
         """
         Get the complete Quran in specified edition.
+        
+        Cached for 365 days as Quranic content never changes.
 
         Args:
             edition: Quran edition identifier
@@ -96,6 +117,7 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to get full Quran (edition={edition}): {e}")
             return None
 
+    @cached(prefix="quran_surah", ttl=31536000)  # 365 days - static content
     async def get_surah(
         self,
         surah_number: int,
@@ -142,6 +164,7 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to get Surah {surah_number}: {e}")
             return None
 
+    @cached(prefix="quran_ayah", ttl=31536000)  # 365 days - static content
     async def get_ayah(
         self,
         ayah_reference: str,
@@ -271,6 +294,7 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to get page {page_number}: {e}")
             return None
 
+    @cached(prefix="quran_editions", ttl=31536000)  # 365 days - static content
     async def get_editions(
         self,
         format_type: Optional[str] = None,
@@ -307,6 +331,7 @@ class QuranComAPIClient(BaseAPIClient):
             logger.error(f"Failed to get editions: {e}")
             return []
 
+    @cached(prefix="quran_search", ttl=2592000)  # 30 days - search results
     async def search_quran(
         self,
         query: str,

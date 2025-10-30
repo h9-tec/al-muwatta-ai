@@ -8,6 +8,13 @@ and logging capabilities.
 from typing import Any, Dict, Optional
 import httpx
 from loguru import logger
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+    retry_if_exception,
+)
 
 from ..config import settings
 
@@ -47,6 +54,12 @@ class BaseAPIClient:
         if self._client and not self._client.is_closed:
             await self._client.aclose()
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((httpx.RequestError, httpx.TimeoutException)),
+        reraise=True,
+    )
     async def _make_request(
         self,
         method: str,
@@ -56,7 +69,11 @@ class BaseAPIClient:
         headers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """
-        Make an HTTP request with error handling.
+        Make an HTTP request with retry logic and error handling.
+
+        Retries up to 3 times with exponential backoff for:
+        - Network errors (RequestError)
+        - Timeout errors (TimeoutException)
 
         Args:
             method: HTTP method (GET, POST, etc.)
@@ -69,7 +86,7 @@ class BaseAPIClient:
             Response data as dictionary
 
         Raises:
-            httpx.HTTPError: If the request fails
+            httpx.HTTPError: If the request fails after retries
         """
         client = await self._get_client()
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
@@ -88,11 +105,13 @@ class BaseAPIClient:
             return response.json()
 
         except httpx.HTTPStatusError as e:
+            # Don't retry on HTTP status errors (4xx, 5xx)
             logger.error(f"HTTP error occurred: {e}")
-            logger.error(f"Response content: {e.response.text}")
+            logger.error(f"Response content: {e.response.text[:500]}")
             raise
-        except httpx.RequestError as e:
-            logger.error(f"Request error occurred: {e}")
+        except (httpx.RequestError, httpx.TimeoutException) as e:
+            # These will be retried by tenacity decorator
+            logger.warning(f"Request error occurred (will retry): {e}")
             raise
         except Exception as e:
             logger.error(f"Unexpected error occurred: {e}")

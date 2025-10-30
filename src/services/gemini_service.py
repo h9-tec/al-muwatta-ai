@@ -5,7 +5,7 @@ This service provides intelligent Arabic content generation, question answering,
 and contextual understanding using Google's Gemini models with RAG enhancement.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 import google.generativeai as genai
 from loguru import logger
 import asyncio
@@ -19,7 +19,9 @@ from ..utils.question_classifier import (
     is_arabic_text,
     detect_arabic_dialect,
 )
-from ..api_clients import QuranAPIClient, QuranComAPIClient, HadithAPIClient, PrayerTimesAPIClient
+
+if TYPE_CHECKING:
+    from ..api_clients import QuranAPIClient, QuranComAPIClient, HadithAPIClient, PrayerTimesAPIClient
 
 
 class GeminiService:
@@ -49,6 +51,9 @@ class GeminiService:
                 except Exception as rag_error:
                     logger.warning(f"RAG initialization failed (will continue without RAG): {rag_error}")
 
+            # Lazy import to avoid circular dependency
+            from ..api_clients import QuranAPIClient, QuranComAPIClient, HadithAPIClient, PrayerTimesAPIClient
+            
             self.quran_client = QuranAPIClient()
             self.hadith_client = HadithAPIClient()
             self.quran_com_client = QuranComAPIClient()
@@ -82,10 +87,14 @@ class GeminiService:
                 max_output_tokens=max_tokens,
             )
 
-            response = self.model.generate_content(
-                prompt,
-                generation_config=generation_config,
-            )
+            # Offload blocking SDK call to a worker thread to avoid blocking the event loop
+            def _generate_sync():
+                return self.model.generate_content(
+                    prompt,
+                    generation_config=generation_config,
+                )
+
+            response = await asyncio.to_thread(_generate_sync)
 
             if response.text:
                 logger.info("Content generated successfully")
@@ -605,8 +614,38 @@ Note: This is educational guidance, not a definitive ruling.
         return await self.generate_content(prompt, temperature=0.4, max_tokens=1000)
 
     async def _fetch_quran_context(self, question: str) -> str:
-        """Fetch relevant Quranic verses for the user's question."""
+        """
+        Fetch relevant Quranic verses for the user's question.
+        
+        Tries cache first (instant), falls back to API if needed.
+        """
+        # Try cache first (FAST - no API calls!)
         try:
+            from .cached_content_service import get_cached_content_service
+            cached_service = get_cached_content_service()
+            
+            # Search in cache for Arabic verses
+            cached_verses = await cached_service.search_quran_in_cache(
+                question,
+                edition="quran-uthmani",
+                limit=3
+            )
+            
+            if cached_verses:
+                logger.info(f"✅ Using {len(cached_verses)} Quran verses from CACHE")
+                contexts = []
+                for verse in cached_verses:
+                    surah_name = verse.get('surah_name', '')
+                    ayah_num = verse.get('ayah_number', '')
+                    text = verse.get('text', '')
+                    contexts.append(f"[Quran {surah_name} {ayah_num}]\n{text}\n")
+                return "\n".join(contexts)
+        except Exception as exc:
+            logger.warning(f"Cache search failed, falling back to API: {exc}")
+        
+        # Fallback to API if cache miss
+        try:
+            from ..api_clients import QuranAPIClient
             async with QuranAPIClient() as client:
                 search_results = await client.search_quran(question, edition="quran-uthmani")
                 matches = search_results.get("matches") if isinstance(search_results, dict) else None
@@ -618,28 +657,55 @@ Note: This is educational guidance, not a definitive ruling.
                         contexts.append(f"[Quran {verse_key}]\n{text}\n")
                     return "\n".join(contexts)
         except Exception as exc:
-            logger.warning(f"Quran Cloud search failed: {exc}")
-
-        try:
-            async with QuranComAPIClient() as quran_com:
-                response = await quran_com.search(question)
-                verses = response.get("search", {}).get("results", []) if isinstance(response, dict) else []
-                contexts = []
-                for verse in verses[:3]:
-                    verse_key = verse.get("verse_key")
-                    text = verse.get("text") or ""
-                    contexts.append(f"[Quran {verse_key}]\n{text}\n")
-                return "\n".join(contexts)
-        except Exception as exc:
-            logger.warning(f"Quran.com search failed: {exc}")
+            logger.warning(f"Quran API search failed: {exc}")
+        
         return ""
 
     async def _fetch_hadith_context(self, question: str, is_fiqh: bool) -> str:
-        """Fetch supporting hadith narrations."""
+        """
+        Fetch supporting hadith narrations.
+        
+        Tries cache first (instant), falls back to API if needed.
+        For fiqh questions, prioritizes Muwatta Malik.
+        """
         if not question:
             return ""
 
+        # Try cache first (FAST - no API calls!)
         try:
+            from .cached_content_service import get_cached_content_service
+            cached_service = get_cached_content_service()
+            
+            # For Maliki fiqh questions, prioritize Muwatta Malik
+            if is_fiqh:
+                collections = ["malik", "bukhari", "muslim"]
+            else:
+                collections = ["bukhari", "muslim", "malik"]
+            
+            cached_hadiths = await cached_service.search_hadith_in_cache(
+                question,
+                collections=collections,
+                limit=3
+            )
+            
+            if cached_hadiths:
+                logger.info(f"✅ Using {len(cached_hadiths)} Hadiths from CACHE")
+                contexts = []
+                for hadith in cached_hadiths:
+                    collection = hadith.get('collection', '').title()
+                    number = hadith.get('number', '')
+                    arab = hadith.get('arab', '')
+                    text = hadith.get('text', '')
+                    contexts.append(
+                        f"[Hadith {collection} #{number}]\n{arab}\n{text}\n"
+                    )
+                return "\n".join(contexts)
+        except Exception as exc:
+            logger.warning(f"Cache search failed, falling back to API: {exc}")
+        
+        # Fallback to API if cache miss
+        try:
+            from ..api_clients import HadithAPIClient
             async with HadithAPIClient() as client:
                 search_results = await client.search_hadith(query=question, limit=3)
                 data = search_results.get("data", []) if isinstance(search_results, dict) else []
@@ -654,6 +720,6 @@ Note: This is educational guidance, not a definitive ruling.
                     )
                 return "\n".join(contexts)
         except Exception as exc:
-            logger.warning(f"Hadith search failed: {exc}")
+            logger.warning(f"Hadith API search failed: {exc}")
         return ""
 

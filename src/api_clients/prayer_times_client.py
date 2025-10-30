@@ -3,15 +3,35 @@ Prayer Times API Client for fetching Islamic prayer times and calendar data.
 
 This client interfaces with:
 - aladhan.com API (free, comprehensive Islamic calendar API)
+
+Implements intelligent caching:
+- Prayer times: 24h TTL (changes daily)
+- Calendar data: 30 days TTL (monthly data)
+- Date conversions: 90 days TTL (static calculations)
+- Qibla direction: 365 days TTL (never changes for location)
+- Asma Al-Husna: Permanent cache (static content)
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from loguru import logger
 
 from .base_client import BaseAPIClient
 from ..config import settings
+
+if TYPE_CHECKING:
+    from ..services.cache_service import cached
+else:
+    # Lazy import to avoid circular dependency
+    def _get_cached():
+        from ..services.cache_service import cached
+        return cached
+    
+    def cached(*args, **kwargs):
+        """Lazy-loaded cached decorator."""
+        actual_cached = _get_cached()
+        return actual_cached(*args, **kwargs)
 
 
 class PrayerTimesAPIClient(BaseAPIClient):
@@ -24,6 +44,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
         """Initialize the Prayer Times API client."""
         super().__init__(base_url=self.ALADHAN_API_BASE)
 
+    @cached(prefix="prayer_times", ttl=86400)  # 24 hours
     async def get_timings(
         self,
         latitude: float,
@@ -33,6 +54,8 @@ class PrayerTimesAPIClient(BaseAPIClient):
     ) -> Optional[Dict[str, Any]]:
         """
         Get prayer times for a specific location and date.
+        
+        Cached for 24 hours as prayer times change daily.
 
         Args:
             latitude: Location latitude
@@ -77,6 +100,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
             logger.error(f"Failed to get prayer timings: {e}")
             return None
 
+    @cached(prefix="prayer_times_city", ttl=86400)  # 24 hours
     async def get_timings_by_city(
         self,
         city: str,
@@ -375,6 +399,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
             logger.error(f"Failed to convert Hijri {day}-{month}-{year} to Gregorian: {e}")
             return None
 
+    @cached(prefix="qibla_direction", ttl=31536000)  # 365 days - never changes for location
     async def get_qibla_direction(
         self,
         latitude: float,
@@ -432,6 +457,7 @@ class PrayerTimesAPIClient(BaseAPIClient):
             logger.error(f"Failed to get Qibla direction: {e}")
             return None
 
+    @cached(prefix="asma_al_husna", ttl=31536000)  # 365 days - static content
     async def get_asma_al_husna(self) -> List[Dict[str, Any]]:
         """
         Get the 99 Names of Allah (Asma Al-Husna).

@@ -1,0 +1,25 @@
+# Development and Testing Dependencies
+
+# Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+
+# Code Quality
+ruff==0.7.4
+mypy==1.11.0
+types-redis==4.6.0
+types-cachetools==5.5.0
+
+# Security
+bandit==1.7.9
+safety==3.2.0
+
+# Pre-commit
+pre-commit==3.8.0
+
+# Development Tools
+ipython==8.27.0
+ipdb==0.13.13
+
