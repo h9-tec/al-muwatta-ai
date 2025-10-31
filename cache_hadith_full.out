@@ -1,0 +1,67 @@
+2025-10-31 14:21:05.629 | INFO     | src.services.cache_service:__init__:72 - 🔧 Cache service initialized (in-memory mode)
+2025-10-31 14:21:05.632 | INFO     | src.services.cache_service:connect_redis:100 - ✅ Redis connected: redis://localhost:6380/0
+2025-10-31 14:21:05.632 | INFO     | __main__:main:229 - Mode: FULL - Complete Bukhari & Muslim
+2025-10-31 14:21:05.632 | INFO     | __main__:main:259 - 
+📋 Caching collections list...
+2025-10-31 14:21:05.974 | INFO     | __main__:main:267 - ✅ Cached 9 collection metadata
+2025-10-31 14:21:05.990 | INFO     | __main__:cache_hadith_collection:100 - 
+============================================================
+2025-10-31 14:21:05.990 | INFO     | __main__:cache_hadith_collection:101 - 📚 Caching Sahih Bukhari (Complete)
+2025-10-31 14:21:05.990 | INFO     | __main__:cache_hadith_collection:102 -    Target: 6,638 hadiths
+2025-10-31 14:21:05.990 | INFO     | __main__:cache_hadith_collection:103 - ============================================================
+2025-10-31 14:21:10.589 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 20/133 batches (15.0%)
+2025-10-31 14:21:12.835 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 40/133 batches (30.1%)
+2025-10-31 14:21:14.906 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 60/133 batches (45.1%)
+2025-10-31 14:21:17.047 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 80/133 batches (60.2%)
+2025-10-31 14:21:18.904 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 100/133 batches (75.2%)
+2025-10-31 14:21:20.820 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 120/133 batches (90.2%)
+2025-10-31 14:21:22.680 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 133/133 batches (100.0%)
+2025-10-31 14:21:22.881 | INFO     | __main__:cache_hadith_collection:148 - ✅ Sahih Bukhari (Complete): 6,771 entries cached successfully
+2025-10-31 14:21:22.881 | INFO     | __main__:cache_hadith_collection:100 - 
+============================================================
+2025-10-31 14:21:22.881 | INFO     | __main__:cache_hadith_collection:101 - 📚 Caching Sahih Muslim (Complete)
+2025-10-31 14:21:22.881 | INFO     | __main__:cache_hadith_collection:102 -    Target: 4,930 hadiths
+2025-10-31 14:21:22.881 | INFO     | __main__:cache_hadith_collection:103 - ============================================================
+2025-10-31 14:21:24.360 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 20/99 batches (20.2%)
+2025-10-31 14:21:26.410 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 40/99 batches (40.4%)
+2025-10-31 14:21:28.381 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 60/99 batches (60.6%)
+2025-10-31 14:21:30.390 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 80/99 batches (80.8%)
+2025-10-31 14:21:32.431 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 99/99 batches (100.0%)
+2025-10-31 14:21:32.632 | INFO     | __main__:cache_hadith_collection:148 - ✅ Sahih Muslim (Complete): 5,029 entries cached successfully
+2025-10-31 14:21:32.632 | INFO     | __main__:cache_hadith_collection:100 - 
+============================================================
+2025-10-31 14:21:32.632 | INFO     | __main__:cache_hadith_collection:101 - 📚 Caching Muwatta Malik (Complete)
+2025-10-31 14:21:32.632 | INFO     | __main__:cache_hadith_collection:102 -    Target: 1,587 hadiths
+2025-10-31 14:21:32.632 | INFO     | __main__:cache_hadith_collection:103 - ============================================================
+2025-10-31 14:21:33.400 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 20/32 batches (62.5%)
+2025-10-31 14:21:34.304 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 32/32 batches (100.0%)
+2025-10-31 14:21:34.504 | INFO     | __main__:cache_hadith_collection:148 - ✅ Muwatta Malik (Complete): 1,619 entries cached successfully
+2025-10-31 14:21:34.506 | INFO     | src.services.cache_service:disconnect_redis:112 - Redis connection closed
+
+======================================================================
+📚 HADITH CACHE POPULATION
+======================================================================
+
+✅ Redis connected: Persistent cache enabled
+
+
+======================================================================
+📊 HADITH CACHE SUMMARY
+======================================================================
+✅ Collections cached:       3
+✅ Total entries cached:     13,419
+⏱️  Time taken:               28.5 seconds
+📊 Cache backend:            Redis (Persistent)
+💾 Cache operations:         13,420
+⚡ Average time/entry:       2.13ms
+======================================================================
+
+📚 Cached Collections:
+   • Sahih Bukhari (Complete)        6,638 hadiths
+   • Sahih Muslim (Complete)         4,930 hadiths
+   • Muwatta Malik (Complete)        1,587 hadiths
+
+✨ Hadith cache population complete!
+🚀 Hadith API requests will now be served from Redis cache!
+💾 Data persists across application restarts
+

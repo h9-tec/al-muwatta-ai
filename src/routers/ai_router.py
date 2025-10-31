@@ -19,6 +19,7 @@ from ..models.schemas import (
     TranslationRequest,
 )
 from ..services import GeminiService, MultiLLMService
+from ..services.cache_service import get_cache_service
 from ..services.orchestrator_service import get_orchestrator_service
 
 # Optional DSPy import - only needed for /ask-dspy endpoint
@@ -51,6 +52,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         logger.info(f"AI request using provider={provider}, model={model or 'default'}")
 
         gemini = GeminiService()
+        cache = get_cache_service()
         orchestrator = get_orchestrator_service()
 
         is_fiqh, category = is_fiqh_question(request.question)
@@ -74,6 +76,25 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
             f"reason={reason}, target_madhabs={target_madhabs}"
         )
         
+        # Build cache key (question + prefs)
+        cache_key = await cache._generate_cache_key(
+            "ai:answer",
+            request.question,
+            language=request.language,
+            provider=provider,
+            model=model,
+            madhabs=tuple(request.madhabs or []),
+            as_mode=request.as_mode,
+            healing=request.quran_healing_mode,
+            web=request.web_search_enabled,
+            web_attempts=request.web_search_attempts,
+        )
+
+        # Serve from cache if exists
+        cached = await cache.get(cache_key)
+        if cached:
+            return AIResponse(**cached)
+
         if request.stream:
             if provider != "gemini":
                 raise HTTPException(
@@ -123,11 +144,27 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                 request.question,
                 limit=5,
             )
+            web_context = ""
+            if request.web_search_enabled:
+                # Ensure at least two different queries; cap at 3 attempts
+                attempts = min(3, max(1, request.web_search_attempts or 2))
+                if target_madhabs and isinstance(target_madhabs, list) and len(target_madhabs) >= 1:
+                    web_context = await orchestrator.perform_web_search_by_madhab(
+                        request.question,
+                        target_madhabs,
+                        attempts=attempts,
+                    )
+                else:
+                    web_context = await orchestrator.perform_web_search(
+                        request.question, attempts=attempts
+                    )
+
             result = await gemini.answer_with_orchestrated_context(
                 request.question,
                 language=request.language,
                 madhab_results=madhab_results,
                 cached_quran_hadith=cached_content,
+                web_context=web_context,
             )
         else:
             # Standard flow
@@ -175,7 +212,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
             if generated:
                 answer_text = generated
 
-        return AIResponse(
+        ai_response = AIResponse(
             content=answer_text,
             language=request.language,
             model=model or (provider if provider != "gemini" else settings.gemini_model),
@@ -188,6 +225,11 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                 "rag_chunks": rag_chunks,
             },
         )
+
+        # Cache the final answer (avoid regeneration). Default TTL from settings.
+        await cache.set(cache_key, ai_response.model_dump())
+
+        return ai_response
 
     except HTTPException:
         raise

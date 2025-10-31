@@ -121,6 +121,23 @@ function App() {
       return false;
     }
   });
+  const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('web_search_enabled');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [webSearchAttempts, setWebSearchAttempts] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('web_search_attempts');
+      const n = parseInt(saved || '2', 10);
+      return Number.isFinite(n) ? Math.min(3, Math.max(1, n)) : 2;
+    } catch {
+      return 2;
+    }
+  });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -163,8 +180,10 @@ function App() {
     try {
       window.localStorage.setItem('as_mode', String(asMode));
       window.localStorage.setItem('quran_healing_mode', String(quranHealingMode));
+      window.localStorage.setItem('web_search_enabled', String(webSearchEnabled));
+      window.localStorage.setItem('web_search_attempts', String(webSearchAttempts));
     } catch {}
-  }, [asMode, quranHealingMode]);
+  }, [asMode, quranHealingMode, webSearchEnabled, webSearchAttempts]);
 
   const handleSend = async (customPrompt?: string) => {
     const messageText = customPrompt || input;
@@ -194,6 +213,8 @@ function App() {
         selectedMadhabs,
         quranHealingMode,
         asMode,
+        webSearchEnabled,
+        webSearchAttempts,
       );
 
       const assistantMsg: Message = {
@@ -473,6 +494,26 @@ function App() {
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Provide comforting Quran/Hadith excerpts from cache, unmodified.
                 </p>
+                <div className="mt-4 flex items-center justify-between mb-2">
+                  <label className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Web Search (Firecrawl)</label>
+                  <input
+                    type="checkbox"
+                    checked={webSearchEnabled}
+                    onChange={(e) => setWebSearchEnabled(e.target.checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Attempts (1-3)</label>
+                  <select
+                    value={webSearchAttempts}
+                    onChange={(e) => setWebSearchAttempts(Number(e.target.value))}
+                    className={`text-sm rounded px-2 py-1 ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}
+                  >
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3</option>
+                  </select>
+                </div>
               </div>
               </>
             )}

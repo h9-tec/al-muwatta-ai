@@ -19,6 +19,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from loguru import logger
+from ..config import settings
 
 # Optional heavy dependencies. Provide lightweight fallbacks for CI/tests.
 try:  # pragma: no cover - import path
@@ -197,7 +198,13 @@ class FiqhRAG:
             create_all_collections: Ensure all four collections exist
         """
         try:
-            self.client = QdrantClient(path=persist_directory)
+            # Prefer external Qdrant server if configured
+            if getattr(settings, "qdrant_url", None):
+                logger.info(f"Connecting to Qdrant server at {settings.qdrant_url}")
+                self.client = QdrantClient(url=settings.qdrant_url)
+            else:
+                logger.info(f"Using embedded Qdrant at path {persist_directory}")
+                self.client = QdrantClient(path=persist_directory)
 
             logger.info("Loading multilingual embedding model for FiqhRAG...")
             self.embedding_model = SentenceTransformer(embedding_model_name)

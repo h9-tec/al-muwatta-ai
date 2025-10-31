@@ -1,0 +1,127 @@
+2025-10-31 14:20:28.894 | INFO     | src.services.cache_service:__init__:72 - 🔧 Cache service initialized (in-memory mode)
+2025-10-31 14:20:28.898 | INFO     | src.services.cache_service:connect_redis:100 - ✅ Redis connected: redis://localhost:6380/0
+2025-10-31 14:20:28.899 | INFO     | __main__:main:147 - Editions to cache: quran-uthmani, en.sahih, en.pickthall, ar.muyassar
+2025-10-31 14:20:28.916 | INFO     | __main__:cache_all_quran:39 - 📖 Caching 114 Surahs in 4 edition(s)...
+2025-10-31 14:20:28.917 | INFO     | __main__:cache_all_quran:43 - 
+============================================================
+2025-10-31 14:20:28.917 | INFO     | __main__:cache_all_quran:44 - Caching all Surahs - Arabic (quran-uthmani)
+2025-10-31 14:20:28.917 | INFO     | __main__:cache_all_quran:45 - ============================================================
+2025-10-31 14:20:32.339 | INFO     | __main__:cache_all_quran:64 -    ✅ 10/114 - Yunus
+2025-10-31 14:20:33.979 | INFO     | __main__:cache_all_quran:64 -    ✅ 20/114 - Taa-Haa
+2025-10-31 14:20:35.519 | INFO     | __main__:cache_all_quran:64 -    ✅ 30/114 - Ar-Room
+2025-10-31 14:20:36.909 | INFO     | __main__:cache_all_quran:64 -    ✅ 40/114 - Ghafir
+2025-10-31 14:20:38.261 | INFO     | __main__:cache_all_quran:64 -    ✅ 50/114 - Qaaf
+2025-10-31 14:20:39.523 | INFO     | __main__:cache_all_quran:64 -    ✅ 60/114 - Al-Mumtahana
+2025-10-31 14:20:40.738 | INFO     | __main__:cache_all_quran:64 -    ✅ 70/114 - Al-Ma'aarij
+2025-10-31 14:20:42.020 | INFO     | __main__:cache_all_quran:64 -    ✅ 80/114 - Abasa
+2025-10-31 14:20:43.331 | INFO     | __main__:cache_all_quran:64 -    ✅ 90/114 - Al-Balad
+2025-10-31 14:20:44.510 | INFO     | __main__:cache_all_quran:64 -    ✅ 100/114 - Al-Aadiyaat
+2025-10-31 14:20:45.703 | INFO     | __main__:cache_all_quran:64 -    ✅ 110/114 - An-Nasr
+2025-10-31 14:20:46.159 | INFO     | __main__:cache_all_quran:72 - ✅ Completed Arabic: 114 Surahs cached
+2025-10-31 14:20:46.160 | INFO     | __main__:cache_all_quran:43 - 
+============================================================
+2025-10-31 14:20:46.160 | INFO     | __main__:cache_all_quran:44 - Caching all Surahs - English (en.sahih)
+2025-10-31 14:20:46.160 | INFO     | __main__:cache_all_quran:45 - ============================================================
+2025-10-31 14:20:47.491 | INFO     | __main__:cache_all_quran:64 -    ✅ 10/114 - Yunus
+2025-10-31 14:20:48.780 | INFO     | __main__:cache_all_quran:64 -    ✅ 20/114 - Taa-Haa
+2025-10-31 14:20:50.102 | INFO     | __main__:cache_all_quran:64 -    ✅ 30/114 - Ar-Room
+2025-10-31 14:20:51.316 | INFO     | __main__:cache_all_quran:64 -    ✅ 40/114 - Ghafir
+2025-10-31 14:20:52.482 | INFO     | __main__:cache_all_quran:64 -    ✅ 50/114 - Qaaf
+2025-10-31 14:20:53.715 | INFO     | __main__:cache_all_quran:64 -    ✅ 60/114 - Al-Mumtahana
+2025-10-31 14:20:54.872 | INFO     | __main__:cache_all_quran:64 -    ✅ 70/114 - Al-Ma'aarij
+2025-10-31 14:20:56.023 | INFO     | __main__:cache_all_quran:64 -    ✅ 80/114 - Abasa
+2025-10-31 14:20:57.245 | INFO     | __main__:cache_all_quran:64 -    ✅ 90/114 - Al-Balad
+2025-10-31 14:20:58.451 | INFO     | __main__:cache_all_quran:64 -    ✅ 100/114 - Al-Aadiyaat
+2025-10-31 14:20:59.590 | INFO     | __main__:cache_all_quran:64 -    ✅ 110/114 - An-Nasr
+2025-10-31 14:21:00.068 | INFO     | __main__:cache_all_quran:72 - ✅ Completed English: 114 Surahs cached
+2025-10-31 14:21:00.068 | INFO     | __main__:cache_all_quran:43 - 
+============================================================
+2025-10-31 14:21:00.068 | INFO     | __main__:cache_all_quran:44 - Caching all Surahs - English (en.pickthall)
+2025-10-31 14:21:00.068 | INFO     | __main__:cache_all_quran:45 - ============================================================
+2025-10-31 14:21:01.679 | INFO     | __main__:cache_all_quran:64 -    ✅ 10/114 - Yunus
+2025-10-31 14:21:03.250 | INFO     | __main__:cache_all_quran:64 -    ✅ 20/114 - Taa-Haa
+2025-10-31 14:21:04.821 | INFO     | __main__:cache_all_quran:64 -    ✅ 30/114 - Ar-Room
+2025-10-31 14:21:06.286 | INFO     | __main__:cache_all_quran:64 -    ✅ 40/114 - Ghafir
+2025-10-31 14:21:08.067 | INFO     | __main__:cache_all_quran:64 -    ✅ 50/114 - Qaaf
+2025-10-31 14:21:09.301 | INFO     | __main__:cache_all_quran:64 -    ✅ 60/114 - Al-Mumtahana
+2025-10-31 14:21:10.727 | INFO     | __main__:cache_all_quran:64 -    ✅ 70/114 - Al-Ma'aarij
+2025-10-31 14:21:12.531 | INFO     | __main__:cache_all_quran:64 -    ✅ 80/114 - Abasa
+2025-10-31 14:21:14.389 | INFO     | __main__:cache_all_quran:64 -    ✅ 90/114 - Al-Balad
+2025-10-31 14:21:16.407 | INFO     | __main__:cache_all_quran:64 -    ✅ 100/114 - Al-Aadiyaat
+2025-10-31 14:21:18.122 | INFO     | __main__:cache_all_quran:64 -    ✅ 110/114 - An-Nasr
+2025-10-31 14:21:18.745 | INFO     | __main__:cache_all_quran:72 - ✅ Completed English: 114 Surahs cached
+2025-10-31 14:21:18.745 | INFO     | __main__:cache_all_quran:43 - 
+============================================================
+2025-10-31 14:21:18.745 | INFO     | __main__:cache_all_quran:44 - Caching all Surahs - English (ar.muyassar)
+2025-10-31 14:21:18.745 | INFO     | __main__:cache_all_quran:45 - ============================================================
+2025-10-31 14:21:28.324 | INFO     | __main__:cache_all_quran:64 -    ✅ 10/114 - Yunus
+2025-10-31 14:21:34.251 | INFO     | __main__:cache_all_quran:64 -    ✅ 20/114 - Taa-Haa
+2025-10-31 14:21:37.903 | INFO     | __main__:cache_all_quran:64 -    ✅ 30/114 - Ar-Room
+2025-10-31 14:21:40.060 | INFO     | __main__:cache_all_quran:64 -    ✅ 40/114 - Ghafir
+2025-10-31 14:21:41.637 | INFO     | __main__:cache_all_quran:64 -    ✅ 50/114 - Qaaf
+2025-10-31 14:21:43.016 | INFO     | __main__:cache_all_quran:64 -    ✅ 60/114 - Al-Mumtahana
+2025-10-31 14:21:44.423 | INFO     | __main__:cache_all_quran:64 -    ✅ 70/114 - Al-Ma'aarij
+2025-10-31 14:21:45.907 | INFO     | __main__:cache_all_quran:64 -    ✅ 80/114 - Abasa
+2025-10-31 14:21:47.086 | INFO     | __main__:cache_all_quran:64 -    ✅ 90/114 - Al-Balad
+2025-10-31 14:21:48.182 | INFO     | __main__:cache_all_quran:64 -    ✅ 100/114 - Al-Aadiyaat
+2025-10-31 14:21:49.421 | INFO     | __main__:cache_all_quran:64 -    ✅ 110/114 - An-Nasr
+2025-10-31 14:21:49.838 | INFO     | __main__:cache_all_quran:72 - ✅ Completed English: 114 Surahs cached
+2025-10-31 14:21:49.838 | INFO     | __main__:cache_all_quran:75 - 
+============================================================
+2025-10-31 14:21:49.838 | INFO     | __main__:cache_all_quran:76 - Caching famous verses...
+2025-10-31 14:21:49.838 | INFO     | __main__:cache_all_quran:77 - ============================================================
+2025-10-31 14:21:49.950 | INFO     | __main__:cache_all_quran:102 -    ✅ Ayat al-Kursi (quran-uthmani)
+2025-10-31 14:21:50.068 | INFO     | __main__:cache_all_quran:102 -    ✅ Ayat al-Kursi (en.sahih)
+2025-10-31 14:21:50.194 | INFO     | __main__:cache_all_quran:102 -    ✅ Ayat al-Kursi (en.pickthall)
+2025-10-31 14:21:50.323 | INFO     | __main__:cache_all_quran:102 -    ✅ Ayat al-Kursi (ar.muyassar)
+2025-10-31 14:21:50.437 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Fatiha verse 1 (quran-uthmani)
+2025-10-31 14:21:50.548 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Fatiha verse 1 (en.sahih)
+2025-10-31 14:21:50.673 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Fatiha verse 1 (en.pickthall)
+2025-10-31 14:21:50.785 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Fatiha verse 1 (ar.muyassar)
+2025-10-31 14:21:50.915 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Ikhlas (quran-uthmani)
+2025-10-31 14:21:51.046 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Ikhlas (en.sahih)
+2025-10-31 14:21:51.179 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Ikhlas (en.pickthall)
+2025-10-31 14:21:51.294 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Ikhlas (ar.muyassar)
+2025-10-31 14:21:51.408 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Falaq (quran-uthmani)
+2025-10-31 14:21:51.518 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Falaq (en.sahih)
+2025-10-31 14:21:51.646 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Falaq (en.pickthall)
+2025-10-31 14:21:51.756 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Falaq (ar.muyassar)
+2025-10-31 14:21:51.869 | INFO     | __main__:cache_all_quran:102 -    ✅ An-Nas (quran-uthmani)
+2025-10-31 14:21:51.981 | INFO     | __main__:cache_all_quran:102 -    ✅ An-Nas (en.sahih)
+2025-10-31 14:21:52.120 | INFO     | __main__:cache_all_quran:102 -    ✅ An-Nas (en.pickthall)
+2025-10-31 14:21:52.235 | INFO     | __main__:cache_all_quran:102 -    ✅ An-Nas (ar.muyassar)
+2025-10-31 14:21:52.347 | INFO     | __main__:cache_all_quran:102 -    ✅ Ya-Sin (quran-uthmani)
+2025-10-31 14:21:52.456 | INFO     | __main__:cache_all_quran:102 -    ✅ Ya-Sin (en.sahih)
+2025-10-31 14:21:52.585 | INFO     | __main__:cache_all_quran:102 -    ✅ Ya-Sin (en.pickthall)
+2025-10-31 14:21:52.715 | INFO     | __main__:cache_all_quran:102 -    ✅ Ya-Sin (ar.muyassar)
+2025-10-31 14:21:52.829 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Mulk (quran-uthmani)
+2025-10-31 14:21:52.963 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Mulk (en.sahih)
+2025-10-31 14:21:53.110 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Mulk (en.pickthall)
+2025-10-31 14:21:53.239 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Mulk (ar.muyassar)
+2025-10-31 14:21:53.352 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Kahf - Friday reading (quran-uthmani)
+2025-10-31 14:21:53.461 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Kahf - Friday reading (en.sahih)
+2025-10-31 14:21:53.591 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Kahf - Friday reading (en.pickthall)
+2025-10-31 14:21:53.722 | INFO     | __main__:cache_all_quran:102 -    ✅ Al-Kahf - Friday reading (ar.muyassar)
+2025-10-31 14:21:53.723 | INFO     | src.services.cache_service:disconnect_redis:112 - Redis connection closed
+
+======================================================================
+📖 QURAN CACHE POPULATION
+======================================================================
+
+✅ Redis connected: Persistent cache enabled
+
+
+======================================================================
+📊 QURAN CACHE SUMMARY
+======================================================================
+✅ Total entries cached:    488
+⏱️  Time taken:              84.8 seconds
+📈 Cache size:               488 entries
+💾 Cache operations:         488 sets
+📊 Cache backend:            Redis (Persistent)
+⚡ Average time/entry:       173.82ms
+======================================================================
+
+✨ Quran cache population complete!
+🚀 Quran API requests will now be served from cache!
+

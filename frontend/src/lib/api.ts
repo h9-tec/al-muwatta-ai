@@ -14,6 +14,8 @@ export const aiApi = {
     madhabs?: string[],
     quranHealingMode?: boolean,
     asMode?: boolean,
+    webSearchEnabled?: boolean,
+    webSearchAttempts?: number,
   ): Promise<AIResponse> => {
     const response = await fetch(`${API_BASE}/api/v1/ai/ask`, {
       method: 'POST',
@@ -24,6 +26,8 @@ export const aiApi = {
         madhabs,
         quran_healing_mode: Boolean(quranHealingMode),
         as_mode: Boolean(asMode),
+        web_search_enabled: Boolean(webSearchEnabled),
+        web_search_attempts: webSearchAttempts ?? 2,
       }),
     });
 

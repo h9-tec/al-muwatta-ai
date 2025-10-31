@@ -1,0 +1,41 @@
+2025-10-31 14:20:39.678 | INFO     | src.services.cache_service:__init__:72 - 🔧 Cache service initialized (in-memory mode)
+2025-10-31 14:20:39.682 | INFO     | src.services.cache_service:connect_redis:100 - ✅ Redis connected: redis://localhost:6380/0
+2025-10-31 14:20:39.682 | INFO     | __main__:main:225 - Mode: Muwatta Malik only (Maliki fiqh)
+2025-10-31 14:20:39.683 | INFO     | __main__:main:259 - 
+📋 Caching collections list...
+2025-10-31 14:20:40.492 | INFO     | __main__:main:267 - ✅ Cached 9 collection metadata
+2025-10-31 14:20:40.511 | INFO     | __main__:cache_hadith_collection:100 - 
+============================================================
+2025-10-31 14:20:40.511 | INFO     | __main__:cache_hadith_collection:101 - 📚 Caching Muwatta Malik (Complete)
+2025-10-31 14:20:40.511 | INFO     | __main__:cache_hadith_collection:102 -    Target: 1,587 hadiths
+2025-10-31 14:20:40.511 | INFO     | __main__:cache_hadith_collection:103 - ============================================================
+2025-10-31 14:20:47.914 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 20/32 batches (62.5%)
+2025-10-31 14:20:52.014 | INFO     | __main__:cache_hadith_collection:143 -    ✅ Progress: 32/32 batches (100.0%)
+2025-10-31 14:20:52.215 | INFO     | __main__:cache_hadith_collection:148 - ✅ Muwatta Malik (Complete): 1,619 entries cached successfully
+2025-10-31 14:20:52.216 | INFO     | src.services.cache_service:disconnect_redis:112 - Redis connection closed
+
+======================================================================
+📚 HADITH CACHE POPULATION
+======================================================================
+
+✅ Redis connected: Persistent cache enabled
+
+
+======================================================================
+📊 HADITH CACHE SUMMARY
+======================================================================
+✅ Collections cached:       1
+✅ Total entries cached:     1,619
+⏱️  Time taken:               11.7 seconds
+📊 Cache backend:            Redis (Persistent)
+💾 Cache operations:         1,620
+⚡ Average time/entry:       7.24ms
+======================================================================
+
+📚 Cached Collections:
+   • Muwatta Malik (Complete)        1,587 hadiths
+
+✨ Hadith cache population complete!
+🚀 Hadith API requests will now be served from Redis cache!
+💾 Data persists across application restarts
+

@@ -874,6 +874,7 @@ Be warm, understanding, and supportive. Return Quran and Hadith texts exactly as
         language: str = "arabic",
         madhab_results: dict[str, list[dict[str, Any]]] | None = None,
         cached_quran_hadith: dict[str, Any] | None = None,
+        web_context: str | None = None,
     ) -> dict[str, Any]:
         """
         Answer question using AS Mode with separate madhab searches and cached content.
@@ -936,7 +937,9 @@ Be warm, understanding, and supportive. Return Quran and Hadith texts exactly as
             if arab or text:
                 hadith_texts.append(f"[Hadith {collection} #{number}]\n{arab}\n{text}\n")
 
-        all_context = "\n".join(madhab_contexts + quran_texts + hadith_texts)
+        web_section = f"\n\n### Web Context (scraped)\n\n{web_context}\n" if web_context else ""
+
+        all_context = "\n".join(madhab_contexts + quran_texts + hadith_texts) + web_section
 
         prompt = f"""
 {scholar_role}
@@ -973,11 +976,13 @@ IMPORTANT:
                 {"type": "quran", "content": "\n".join(quran_texts)},
                 {"type": "hadith", "content": "\n".join(hadith_texts)},
                 {"type": "fiqh", "content": "\n".join(madhab_contexts)},
+                {"type": "web", "content": web_context or ""},
             ],
             "raw_context": {
                 "quran": "\n".join(quran_texts),
                 "hadith": "\n".join(hadith_texts),
                 "fiqh": "\n".join(madhab_contexts),
+                "web": web_context or "",
             },
             "rag_chunks": rag_chunks,
         }

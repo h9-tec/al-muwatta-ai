@@ -16,6 +16,7 @@ from loguru import logger
 
 from ..services.cached_content_service import get_cached_content_service
 from ..services.fiqh_rag_service import FiqhRAG, get_fiqh_rag
+from ..services.web_search_service import WebSearchService
 from ..utils.question_classifier import is_fiqh_question
 
 MADHAB_KEYS = ["maliki", "hanafi", "shafii", "hanbali"]
@@ -30,6 +31,7 @@ class OrchestratorService:
         self.cache_service = get_cached_content_service()
         # Lazy import to avoid circular dependency
         self._gemini_service = None
+        self.web_search = WebSearchService()
 
     async def search_madhabs_separately(
         self,
@@ -205,38 +207,36 @@ class OrchestratorService:
 
         # Use LLM to analyze if multi-madhab perspective is needed
         analysis_prompt = f"""
-You are an expert Islamic scholar analyzing user questions to determine if they require a multi-madhab (multi-school) fiqh response.
+You are an expert Islamic scholar and orchestration planner. Decide how to answer the user's query safely and comprehensively.
 
-**Question to analyze:**
-"{question}"
+Question: "{question}"
 
-**Context:**
-In Islamic jurisprudence (fiqh), there are four major Sunni schools (madhabs):
-1. Maliki - Founded by Imam Malik
-2. Hanafi - Founded by Imam Abu Hanifa
-3. Shafi'i - Founded by Imam Shafi'i
-4. Hanbali - Founded by Imam Ahmad ibn Hanbal
+Domains to cover when relevant:
+- Fiqh (jurisprudence): Maliki, Hanafi, Shafi'i, Hanbali
+- Quran and authentic Hadith: include the texts EXACTLY as provided (do not alter)
+- General Islamic topics (aqidah, seerah, tafsir): balanced and respectful
 
-**When to use multi-madhab response:**
-- General fiqh questions that could have different rulings across schools
-- Questions implicitly asking about Islamic law without specifying a school
-- Questions about differences between schools
-- Questions that would benefit from seeing multiple perspectives
+Use multi-madhab when:
+- The question is a general fiqh ruling that might vary across schools
+- The user asks for comparison/differences between schools
+- No school is specified and comparative view improves clarity
 
-**When NOT to use multi-madhab response:**
-- Simple greetings, casual conversation, non-religious questions
-- Questions explicitly about a single specific madhab (e.g., "What does Maliki say about...")
-- Questions about Quran recitation, Hadith narration, or general Islamic knowledge
-- Questions that are clearly not about Islamic law/jurisprudence
+Do NOT use multi-madhab when:
+- Greeting or non-religious chat
+- A single specific madhab is explicitly requested
+- The topic is non-fiqh (pure Quran/Hadith retrieval or general info)
 
-**Your task:**
-Analyze the question and respond with ONLY a JSON object in this exact format:
-{{
-    "needs_multi_madhab": true/false,
-    "reason": "Brief explanation of why multi-madhab is or isn't needed (1-2 sentences)"
-}}
+Web search enrichment (browser-like crawler):
+- Use only when fiqh topics benefit from corroboration or clarity
+- Always keep Quran/Hadith texts unchanged; web content is supplementary
+- Attempt at least 2 distinct queries; at most 3 regenerated queries
 
-Be precise and thoughtful. Consider the nuance of the question.
+Return ONLY JSON in this exact format:
+{
+  "needs_multi_madhab": true/false,
+  "needs_web_search": true/false,
+  "reason": "1-2 concise sentences explaining the decision"
+}
 """
 
         try:
@@ -352,6 +352,126 @@ Be precise and thoughtful. Consider the nuance of the question.
 
         # Default: use multi-madhab for general fiqh questions
         return (True, "General fiqh question - provide multi-madhab perspective")
+
+    async def generate_search_queries(
+        self,
+        question: str,
+        max_attempts: int = 2,
+        madhab: str | None = None,
+    ) -> list[str]:
+        """Use LLM to generate up to N diverse web search queries for enrichment.
+
+        When `madhab` is provided, constrain the queries to that specific school
+        to avoid mixing sources across madhabs.
+        """
+        if self._gemini_service is None:
+            from ..services.gemini_service import GeminiService
+
+            self._gemini_service = GeminiService()
+
+        scope = (
+            f" within the {madhab.capitalize()} madhab only"
+            if madhab
+            else " across Islamic jurisprudential sources"
+        )
+
+        prompt = f"""
+You are an expert Islamic researcher. Produce up to {max_attempts} diverse web search queries to find authentic fiqh references about the user's question{scope}.
+
+Rules:
+- Prioritize primary sources (Quran, authentic Hadith), then classical jurists' texts, then reputable modern fatwa portals.
+- Avoid sensational or non-scholarly sources.
+- Queries should be concise and in the same language as the question.
+
+Question: "{question}"
+
+Return ONLY a JSON array of strings, e.g. ["query 1", "query 2"].
+"""
+
+        try:
+            text = await self._gemini_service.generate_content(prompt, temperature=0.2, max_tokens=200)
+            import json
+            # Try direct parse; else extract between brackets
+            try:
+                arr = json.loads(text)
+            except Exception:
+                start = text.find("[")
+                end = text.rfind("]") + 1
+                arr = json.loads(text[start:end]) if start != -1 and end > start else []
+            queries = [q for q in arr if isinstance(q, str) and q.strip()]
+            return queries[: max(1, max_attempts)]
+        except Exception as exc:
+            logger.warning(f"Failed to generate search queries: {exc}")
+            return [question]
+
+    async def perform_web_search(self, question: str, attempts: int = 2) -> str:
+        """
+        Perform web enrichment by scraping authoritative sources using Firecrawl.
+        Ensures at least two different queries are used when available.
+        """
+        attempts = max(1, min(3, attempts))
+        queries = await self.generate_search_queries(question, max_attempts=attempts)
+
+        aggregated_markdown: list[str] = []
+        for q in queries[:attempts]:
+            # Wide web search via Firecrawl search, fallback to curated sources
+            urls = await self.web_search.search(q, max_results=5)
+            if not urls:
+                urls = self.web_search.build_source_urls(q)
+            scraped = await self.web_search.scrape_urls(urls, limit=4)
+            for item in scraped:
+                md = item.get("markdown") or item.get("html") or ""
+                if md:
+                    aggregated_markdown.append(f"\n\n### Source: {item.get('url','')}\n\n{md[:4000]}")
+
+        return "\n".join(aggregated_markdown)
+
+    async def perform_web_search_by_madhab(
+        self, question: str, madhabs: list[str], attempts: int = 2
+    ) -> str:
+        """
+        Perform web enrichment per selected madhab, generating separate
+        search queries and scraped context for each school. This avoids
+        mixing sources and improves accuracy.
+        """
+        if not madhabs:
+            return await self.perform_web_search(question, attempts)
+
+        # Normalize provided madhab names
+        normalized: list[str] = []
+        for m in madhabs:
+            try:
+                from ..services.fiqh_rag_service import normalize_madhab_name
+
+                nm = normalize_madhab_name(m)
+            except Exception:
+                nm = (m or "").strip().lower()
+            if nm:
+                normalized.append(nm)
+
+        aggregated_sections: list[str] = []
+        for m in normalized:
+            queries = await self.generate_search_queries(
+                question, max_attempts=attempts, madhab=m
+            )
+
+            section_md: list[str] = [f"\n\n## {m.upper()} Madhab - Web Context\n"]
+            for q in queries[:attempts]:
+                urls = await self.web_search.search(q, max_results=5)
+                if not urls:
+                    urls = self.web_search.build_source_urls(q)
+
+                scraped = await self.web_search.scrape_urls(urls, limit=4)
+                for item in scraped:
+                    md = item.get("markdown") or item.get("html") or ""
+                    if md:
+                        section_md.append(
+                            f"\n### Source: {item.get('url','')}\n\n{md[:4000]}"
+                        )
+
+            aggregated_sections.append("\n".join(section_md))
+
+        return "\n".join(aggregated_sections)
 
 
 # Singleton instance

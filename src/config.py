@@ -92,6 +92,18 @@ class Settings(BaseSettings):
         description="Redis connection URL for caching",
     )
 
+    # Qdrant Configuration
+    qdrant_url: str | None = Field(
+        default=None,
+        description="Qdrant server URL (e.g., http://localhost:6333). If not set, uses embedded local DB.",
+    )
+
+    # Web Search / Firecrawl
+    firecrawl_api_key: str | None = Field(
+        default=None,
+        description="Firecrawl API key for web scraping (optional)",
+    )
+
     # Logging Configuration
     log_level: str = Field(default="INFO", description="Logging level")
 
