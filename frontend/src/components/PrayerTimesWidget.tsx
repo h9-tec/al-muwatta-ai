@@ -31,7 +31,7 @@ export function PrayerTimesWidget() {
             const data: any = response?.timings ?? response?.data ?? response;
             const times = data?.timings ?? null;
             if (times) setPrayerTimes(times as PrayerTimes);
-
+            
             const meta = data?.meta ?? response?.meta ?? undefined;
             if (meta) {
               const city = meta.timezone || meta.timezoneName || 'Your Location';

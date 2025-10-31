@@ -170,7 +170,7 @@ function App() {
       const results = await Promise.allSettled(
         targets.map((m) => aiApi.ask(enhancedPrompt, detectedLang, [m]))
       );
-
+      
       const now = Date.now();
       const assistantMsgs: Message[] = results.map((res, idx) => {
         const m = targets[idx];
@@ -185,9 +185,9 @@ function App() {
         }
         return {
           id: (now + idx + 1).toString(),
-          role: 'assistant',
+        role: 'assistant',
           content: `Failed to get response for ${m} madhab.`,
-          timestamp: new Date(),
+        timestamp: new Date(),
           metadata: { error: String(res.reason ?? 'unknown'), madhab: m },
         } satisfies Message;
       });
