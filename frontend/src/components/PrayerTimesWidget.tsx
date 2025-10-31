@@ -26,13 +26,16 @@ export function PrayerTimesWidget() {
               position.coords.latitude,
               position.coords.longitude
             );
-            setPrayerTimes(response.timings.timings);
-            
-            // Try to get city name from response
-            const meta = response.timings?.meta;
+
+            // Backward/forward compatible extraction of timings/meta
+            const data: any = response?.timings ?? response?.data ?? response;
+            const times = data?.timings ?? null;
+            if (times) setPrayerTimes(times as PrayerTimes);
+
+            const meta = data?.meta ?? response?.meta ?? undefined;
             if (meta) {
-              const city = meta.timezone || 'Your Location';
-              setLocation(city.split('/').pop() || 'Your Location');
+              const city = meta.timezone || meta.timezoneName || 'Your Location';
+              setLocation((String(city).split('/').pop() as string) || 'Your Location');
             } else {
               setLocation('Your Location');
             }
@@ -60,7 +63,9 @@ export function PrayerTimesWidget() {
     try {
       // Makkah coordinates
       const response = await prayerTimesApi.getTimings(21.3891, 39.8579);
-      setPrayerTimes(response.timings.timings);
+      const data: any = response?.timings ?? response?.data ?? response;
+      const times = data?.timings ?? null;
+      if (times) setPrayerTimes(times as PrayerTimes);
       setLocation('Makkah, Saudi Arabia');
     } catch (error) {
       console.error('Failed to load default prayer times:', error);

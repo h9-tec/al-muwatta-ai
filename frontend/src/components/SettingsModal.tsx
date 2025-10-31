@@ -57,6 +57,14 @@ export function SettingsModal() {
     }
   }, [isOpen]);
 
+  // When user switches provider, load any saved API key and clear model selection
+  useEffect(() => {
+    const key = localStorage.getItem(`${selectedProvider}_api_key`) || '';
+    setApiKey(key);
+    setModels([]);
+    setSelectedModel('');
+  }, [selectedProvider]);
+
   const fetchProviders = async () => {
     try {
       const response = await api.get('/api/v1/settings/providers');
@@ -161,11 +169,7 @@ export function SettingsModal() {
                 </label>
                 <select
                   value={selectedProvider}
-                  onChange={(e) => {
-                    setSelectedProvider(e.target.value);
-                    setModels([]);
-                    setSelectedModel('');
-                  }}
+                  onChange={(e) => setSelectedProvider(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-islamic-green outline-none"
                 >
                   {Object.entries(providers).map(([key, provider]) => (

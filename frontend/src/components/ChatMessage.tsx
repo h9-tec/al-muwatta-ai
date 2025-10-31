@@ -43,6 +43,7 @@ export function ChatMessage({ id, role, content, timestamp, question, metadata }
   const isUser = role === 'user';
   const isArabic = isArabicText(content);
   const [showRagChunks, setShowRagChunks] = useState(false);
+  const madhab = (metadata?.madhab as string | undefined)?.toUpperCase();
 
   const ragChunks = Array.isArray(metadata?.rag_chunks)
     ? (metadata?.rag_chunks as Array<Record<string, unknown>>)
@@ -115,6 +116,11 @@ export function ChatMessage({ id, role, content, timestamp, question, metadata }
               : 'glass-morphism text-neutral-800 shadow-prophetic-sm rounded-tl-none border border-paradise-500/10'
           )}
         >
+          {!isUser && madhab && (
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-islamic-green">
+              {madhab} Madhab
+            </div>
+          )}
           {isUser ? (
             <p className={cn(
               "text-sm leading-relaxed whitespace-pre-wrap",

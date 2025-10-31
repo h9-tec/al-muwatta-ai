@@ -11,6 +11,7 @@ import { HijriDate } from './components/HijriDate';
 import { ExportChat } from './components/ExportChat';
 import { BookmarksView } from './components/BookmarksView';
 import { FontSizeControl } from './components/FontSizeControl';
+import { MadhabSelector } from './components/MadhabSelector';
 import { aiApi } from './lib/api';
 import { detectLanguage, getLanguageInstruction } from './lib/language-detector';
 import { cn } from './lib/utils';
@@ -93,7 +94,7 @@ function App() {
   
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'qibla' | 'tasbeeh'>('chat');
-  const [selectedMadhabs] = useState<string[]>(() => {
+  const [selectedMadhabs, setSelectedMadhabs] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('selected_madhabs');
       if (!saved) return [];
@@ -133,6 +134,13 @@ function App() {
     window.localStorage.setItem('dark_mode', isDark.toString());
   }, [isDark]);
 
+  // Persist madhab selection
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('selected_madhabs', JSON.stringify(selectedMadhabs ?? []));
+    } catch {}
+  }, [selectedMadhabs]);
+
   const handleSend = async (customPrompt?: string) => {
     const messageText = customPrompt || input;
     if (!messageText.trim() || loading) return;
@@ -152,24 +160,39 @@ function App() {
       // Detect user's language
       const detectedLang = detectLanguage(messageText);
       const languageInstruction = getLanguageInstruction(detectedLang, messageText);
-      
-      // Send with language instruction and provider selection
       const enhancedPrompt = languageInstruction + messageText;
-      const response = await aiApi.ask(
-        enhancedPrompt,
-        detectedLang,
-        selectedMadhabs && selectedMadhabs.length > 0 ? selectedMadhabs : undefined,
-      );
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response.content,
-        timestamp: new Date(),
-        metadata: response.metadata,
-      };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Determine target madhabs (default to all four if none selected)
+      const ALL_MADHABS = ['maliki', 'hanafi', 'shafii', 'hanbali'];
+      const targets = (selectedMadhabs && selectedMadhabs.length > 0) ? selectedMadhabs : ALL_MADHABS;
+
+      // Query each madhab separately to render separate answers in the chat
+      const results = await Promise.allSettled(
+        targets.map((m) => aiApi.ask(enhancedPrompt, detectedLang, [m]))
+      );
+
+      const now = Date.now();
+      const assistantMsgs: Message[] = results.map((res, idx) => {
+        const m = targets[idx];
+        if (res.status === 'fulfilled') {
+          return {
+            id: (now + idx + 1).toString(),
+            role: 'assistant',
+            content: res.value.content,
+            timestamp: new Date(),
+            metadata: { ...(res.value.metadata ?? {}), madhab: m },
+          } satisfies Message;
+        }
+        return {
+          id: (now + idx + 1).toString(),
+          role: 'assistant',
+          content: `Failed to get response for ${m} madhab.`,
+          timestamp: new Date(),
+          metadata: { error: String(res.reason ?? 'unknown'), madhab: m },
+        } satisfies Message;
+      });
+
+      setMessages((prev) => [...prev, ...assistantMsgs]);
     } catch (error) {
       console.error('Failed to get response:', error);
       
@@ -410,6 +433,10 @@ function App() {
                 <PrayerTimesWidget />
                 <HijriDate />
                 <FontSizeControl />
+                <MadhabSelector
+                  value={selectedMadhabs}
+                  onChange={setSelectedMadhabs}
+                />
               </>
             )}
 
