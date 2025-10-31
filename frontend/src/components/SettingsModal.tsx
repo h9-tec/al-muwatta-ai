@@ -68,7 +68,11 @@ export function SettingsModal() {
   const fetchProviders = async () => {
     try {
       const response = await api.get('/api/v1/settings/providers');
-      setProviders(response.data.providers);
+      // Merge with defaults to ensure all providers remain selectable
+      setProviders((prev) => ({
+        ...prev,
+        ...(response?.data?.providers ?? {}),
+      }));
     } catch (error) {
       console.error('Failed to fetch providers:', error);
     }
@@ -150,6 +154,20 @@ export function SettingsModal() {
                 <div>
                   <h2 className="text-2xl font-bold">⚙️ LLM Settings</h2>
                   <p className="text-sm opacity-90">Configure your AI provider</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs opacity-90 hidden sm:block">Provider</label>
+                  <select
+                    value={selectedProvider}
+                    onChange={(e) => setSelectedProvider(e.target.value)}
+                    className="px-3 py-2 rounded-lg text-gray-900"
+                  >
+                    {Object.entries(providers).map(([key, provider]) => (
+                      <option key={key} value={key}>
+                        {provider.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
