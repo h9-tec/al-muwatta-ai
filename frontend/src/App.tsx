@@ -495,7 +495,7 @@ function App() {
                   Provide comforting Quran/Hadith excerpts from cache, unmodified.
                 </p>
                 <div className="mt-4 flex items-center justify-between mb-2">
-                  <label className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Web Search (Firecrawl)</label>
+                  <label className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Web Search</label>
                   <input
                     type="checkbox"
                     checked={webSearchEnabled}
