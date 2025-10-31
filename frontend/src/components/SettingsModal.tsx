@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings, X, Check, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
-import { MadhabSelector } from './MadhabSelector';
 
 interface Provider {
   name: string;
@@ -34,7 +33,6 @@ export function SettingsModal() {
   const [selectedModel, setSelectedModel] = useState('');
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [selectedMadhabs, setSelectedMadhabs] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,17 +41,10 @@ export function SettingsModal() {
       const savedProvider = localStorage.getItem('llm_provider');
       const savedModel = localStorage.getItem('llm_model');
       const savedKey = localStorage.getItem(`${selectedProvider}_api_key`);
-      const savedMadhabs = localStorage.getItem('selected_madhabs');
       
       if (savedProvider) setSelectedProvider(savedProvider);
       if (savedModel) setSelectedModel(savedModel);
       if (savedKey) setApiKey(savedKey);
-      if (savedMadhabs) {
-        try {
-          const arr = JSON.parse(savedMadhabs);
-          if (Array.isArray(arr)) setSelectedMadhabs(arr);
-        } catch {}
-      }
     }
   }, [isOpen]);
 
@@ -124,7 +115,6 @@ export function SettingsModal() {
     if (apiKey) {
       localStorage.setItem(`${selectedProvider}_api_key`, apiKey);
     }
-    localStorage.setItem('selected_madhabs', JSON.stringify(selectedMadhabs ?? []));
     alert('✅ Settings saved!');
     setIsOpen(false);
   };
@@ -256,12 +246,6 @@ export function SettingsModal() {
                   </select>
                 </div>
               )}
-
-              {/* Fiqh Schools (madhab) selection */}
-              <MadhabSelector
-                value={selectedMadhabs}
-                onChange={setSelectedMadhabs}
-              />
 
               {/* Test Connection */}
               {selectedModel && (
