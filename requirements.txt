@@ -63,3 +63,15 @@ pytz==2024.2
 # Data Validation & Serialization
 orjson==3.10.10
 
+# Vector Database & RAG
+qdrant-client>=1.15.0
+sentence-transformers>=5.1.0
+
+# Web Scraping & HTML Processing
+scrapy>=2.13.0
+beautifulsoup4>=4.14.0
+html2text>=2025.4.0
+
+# ML/AI Framework (Optional - for DSPy RAG)
+dspy-ai>=3.0.3
+
