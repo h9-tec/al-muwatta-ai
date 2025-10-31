@@ -26,15 +26,36 @@ const renderSources = (metadata?: Record<string, unknown>) => {
   const sources = metadata.sources as Array<{ type: string; content: string }> | undefined;
   if (!sources || sources.length === 0) return null;
 
+  const otherSources = sources.filter((s) => (s.type || '').toLowerCase() !== 'web' && s.content);
+  const webSources = sources.filter((s) => (s.type || '').toLowerCase() === 'web' && s.content);
+
   return (
     <div className="mt-3 space-y-2 text-xs text-gray-600 border-t border-gray-200 pt-3">
       <p className="font-semibold">Sources referenced:</p>
-      {sources.map((source, index) => (
-        <div key={index} className="bg-white/60 rounded-lg p-2">
+
+      {/* Non-web sources shown by default */}
+      {otherSources.map((source, index) => (
+        <div key={`src-${index}`} className="bg-white/60 rounded-lg p-2">
           <p className="uppercase tracking-wide text-[10px] text-gray-500 mb-1">{source.type}</p>
           <pre className="whitespace-pre-wrap break-words text-gray-700">{source.content}</pre>
         </div>
       ))}
+
+      {/* Web sources collapsed by default to avoid clutter */}
+      {webSources.length > 0 && (
+        <details className="bg-white/60 rounded-lg p-2" open={false}>
+          <summary className="cursor-pointer font-semibold text-gray-700">Web context ({webSources.length}) - click to expand</summary>
+          <div className="mt-2 space-y-2">
+            {webSources.map((source, index) => (
+              <div key={`web-${index}`} className="rounded-lg bg-white/70 p-2">
+                <pre className="whitespace-pre-wrap break-words text-gray-700">
+                  {(source.content || '').slice(0, 4000)}
+                </pre>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 };

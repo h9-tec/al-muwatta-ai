@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from loguru import logger
+from ..config import settings
 
 from ..services.cached_content_service import get_cached_content_service
 from ..services.fiqh_rag_service import FiqhRAG, get_fiqh_rag
@@ -191,7 +192,11 @@ class OrchestratorService:
         Returns:
             Tuple of (should_use_multi_madhab: bool, reason: str)
         """
-        # Lazy load Gemini service
+        # If Gemini is not configured, skip LLM analysis and fallback immediately
+        if not (getattr(settings, "gemini_api_key", None)):
+            return self._fallback_keyword_check(question)
+
+        # Lazy load Gemini service only when API key is configured
         if self._gemini_service is None:
             from ..services.gemini_service import GeminiService
 
@@ -364,6 +369,10 @@ Return ONLY JSON in this exact format:
         When `madhab` is provided, constrain the queries to that specific school
         to avoid mixing sources across madhabs.
         """
+        # If Gemini is not configured, return simple fallback query list
+        if not (getattr(settings, "gemini_api_key", None)):
+            return [question]
+
         if self._gemini_service is None:
             from ..services.gemini_service import GeminiService
 

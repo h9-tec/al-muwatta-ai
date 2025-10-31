@@ -52,7 +52,6 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         model = request.model
         logger.info(f"AI request using provider={provider}, model={model or 'default'}")
 
-        gemini = GeminiService()
         cache = get_cache_service()
         orchestrator = get_orchestrator_service()
 
@@ -104,6 +103,8 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
             if not is_fiqh:
                 raise HTTPException(status_code=400, detail="Streaming restricted to fiqh queries")
             try:
+                # Lazy init Gemini only when needed
+                gemini = GeminiService()
                 stream_payload = await gemini.stream_fiqh_answer(
                     request.question,
                     language=request.language,
@@ -247,8 +248,10 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                 logger.error(f"Non-Gemini flow failed: {exc}")
                 raise HTTPException(status_code=500, detail=str(exc))
 
-        # Handle Quran Healing mode
+        # Handle Quran Healing mode (Gemini only)
         if request.quran_healing_mode:
+            # Lazy init Gemini only when healing mode is requested
+            gemini = GeminiService()
             healing_content = await orchestrator.get_quran_healing_content(
                 user_state=request.question,
                 psychological_keywords=None,
@@ -294,7 +297,8 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                 web_context=web_context,
             )
         else:
-            # Standard flow
+            # Standard flow (Gemini only)
+            gemini = GeminiService()
             result = await gemini.answer_islamic_question(
                 request.question,
                 language=request.language,
