@@ -12,25 +12,32 @@ import os
 from collections.abc import Callable, Iterator
 from typing import Any
 
-import dspy
+try:
+    import dspy
+    DSPY_AVAILABLE = True
+except ImportError:
+    DSPY_AVAILABLE = False
+    dspy = None  # type: ignore
+
 from loguru import logger
 
 from .rag_service import MalikiFiqhRAG
 
 
-class FiqhQASignature(dspy.Signature):
-    """Signature for Fiqh Question Answering with citations."""
+if DSPY_AVAILABLE:
+    class FiqhQASignature(dspy.Signature):
+        """Signature for Fiqh Question Answering with citations."""
 
-    context: str = dspy.InputField(desc="Relevant Maliki fiqh texts from knowledge base")
-    question: str = dspy.InputField(desc="User's fiqh question in Arabic or English")
-    answer: str = dspy.OutputField(desc="Detailed answer with Islamic scholarship standards")
-    citations: str = dspy.OutputField(desc="Source citations from provided context")
+        context: str = dspy.InputField(desc="Relevant Maliki fiqh texts from knowledge base")
+        question: str = dspy.InputField(desc="User's fiqh question in Arabic or English")
+        answer: str = dspy.OutputField(desc="Detailed answer with Islamic scholarship standards")
+        citations: str = dspy.OutputField(desc="Source citations from provided context")
 
 
-class FiqhChainOfThought(dspy.Module):
-    """ChainOfThought RAG for Fiqh questions."""
+    class FiqhChainOfThought(dspy.Module):
+        """ChainOfThought RAG for Fiqh questions."""
 
-    def __init__(self, num_passages: int = 5) -> None:
+        def __init__(self, num_passages: int = 5) -> None:
         """
         Initialize ChainOfThought RAG module.
 
@@ -311,8 +318,16 @@ def get_dspy_rag() -> DSPyMalikiFiqhRAG:
 
     Returns:
         DSPyMalikiFiqhRAG instance
+
+    Raises:
+        ImportError: If dspy is not installed
     """
     global _dspy_rag_instance
+
+    if not DSPY_AVAILABLE:
+        raise ImportError(
+            "dspy is not installed. Install it with: pip install dspy-ai"
+        )
 
     if _dspy_rag_instance is None:
         _dspy_rag_instance = DSPyMalikiFiqhRAG()

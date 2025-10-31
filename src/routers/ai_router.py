@@ -19,7 +19,15 @@ from ..models.schemas import (
     TranslationRequest,
 )
 from ..services import GeminiService, MultiLLMService
-from ..services.dspy_rag_service import get_dspy_rag
+
+# Optional DSPy import - only needed for /ask-dspy endpoint
+try:
+    from ..services.dspy_rag_service import get_dspy_rag
+    DSPY_AVAILABLE = True
+except ImportError:
+    DSPY_AVAILABLE = False
+    get_dspy_rag = None  # type: ignore
+
 from ..utils.question_classifier import is_fiqh_question
 
 router = APIRouter(prefix="/api/v1/ai", tags=["AI Assistant"])
@@ -458,6 +466,12 @@ async def ask_with_dspy(request: IslamicQuestionRequest) -> AIResponse:
     Returns:
         AI-generated answer with reasoning trace and citations
     """
+    if not DSPY_AVAILABLE or get_dspy_rag is None:
+        raise HTTPException(
+            status_code=503,
+            detail="DSPy is not installed. Install it with: pip install dspy-ai"
+        )
+
     try:
         logger.info(f"DSPy RAG request: {request.question[:100]}...")
 
@@ -495,8 +509,7 @@ async def ask_with_dspy(request: IslamicQuestionRequest) -> AIResponse:
                 )
 
         return AIResponse(
-            answer=result["answer"],
-            sources=sources,
+            content=result["answer"],
             language=request.language or "ar",
             model="dspy-cot-gemini-2.0-flash",
             metadata={
@@ -504,6 +517,7 @@ async def ask_with_dspy(request: IslamicQuestionRequest) -> AIResponse:
                 "reasoning": result.get("reasoning", ""),
                 "framework": "dspy",
                 "retrieval_count": len(sources),
+                "sources": sources,
             },
         )
 
