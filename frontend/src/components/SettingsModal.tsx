@@ -62,7 +62,7 @@ export function SettingsModal() {
       // Merge with defaults to ensure all providers remain selectable
       setProviders((prev) => ({
         ...prev,
-        ...(response?.data?.providers ?? {}),
+        ...(response?.providers ?? {}),
       }));
     } catch (error) {
       console.error('Failed to fetch providers:', error);
@@ -76,9 +76,11 @@ export function SettingsModal() {
         `/api/v1/settings/providers/${selectedProvider}/models`,
         { api_key: apiKey }
       );
-      setModels(response.data.models);
-      if (response.data.models.length > 0) {
-        setSelectedModel(response.data.models[0].id);
+      // API returns { provider, models_count, models } directly
+      const modelsList = response?.models ?? [];
+      setModels(modelsList);
+      if (modelsList.length > 0) {
+        setSelectedModel(modelsList[0].id);
       }
     } catch (error) {
       console.error('Failed to fetch models:', error);
@@ -100,7 +102,8 @@ export function SettingsModal() {
           model: selectedModel,
         }
       );
-      alert(`✅ ${response.data.message}\n\nTest response: ${response.data.test_response}`);
+      // API returns { status, provider, model, test_response, message } directly
+      alert(`✅ ${response.message}\n\nTest response: ${response.test_response}`);
     } catch (error) {
       alert('❌ Connection failed. Check your settings.');
     } finally {
