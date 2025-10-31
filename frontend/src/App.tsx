@@ -104,6 +104,23 @@ function App() {
       return [];
     }
   });
+  // Modes
+  const [asMode, setAsMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('as_mode');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [quranHealingMode, setQuranHealingMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('quran_healing_mode');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
+  });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +158,14 @@ function App() {
     } catch {}
   }, [selectedMadhabs]);
 
+  // Persist modes
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('as_mode', String(asMode));
+      window.localStorage.setItem('quran_healing_mode', String(quranHealingMode));
+    } catch {}
+  }, [asMode, quranHealingMode]);
+
   const handleSend = async (customPrompt?: string) => {
     const messageText = customPrompt || input;
     if (!messageText.trim() || loading) return;
@@ -162,37 +187,24 @@ function App() {
       const languageInstruction = getLanguageInstruction(detectedLang, messageText);
       const enhancedPrompt = languageInstruction + messageText;
 
-      // Determine target madhabs (default to all four if none selected)
-      const ALL_MADHABS = ['maliki', 'hanafi', 'shafii', 'hanbali'];
-      const targets = (selectedMadhabs && selectedMadhabs.length > 0) ? selectedMadhabs : ALL_MADHABS;
-
-      // Query each madhab separately to render separate answers in the chat
-      const results = await Promise.allSettled(
-        targets.map((m) => aiApi.ask(enhancedPrompt, detectedLang, [m]))
+      // Single backend request; orchestrator decides multi-madhab based on question
+      const response = await aiApi.ask(
+        enhancedPrompt,
+        detectedLang,
+        selectedMadhabs,
+        quranHealingMode,
+        asMode,
       );
-      
-      const now = Date.now();
-      const assistantMsgs: Message[] = results.map((res, idx) => {
-        const m = targets[idx];
-        if (res.status === 'fulfilled') {
-          return {
-            id: (now + idx + 1).toString(),
-            role: 'assistant',
-            content: res.value.content,
-            timestamp: new Date(),
-            metadata: { ...(res.value.metadata ?? {}), madhab: m },
-          } satisfies Message;
-        }
-        return {
-          id: (now + idx + 1).toString(),
-        role: 'assistant',
-          content: `Failed to get response for ${m} madhab.`,
-        timestamp: new Date(),
-          metadata: { error: String(res.reason ?? 'unknown'), madhab: m },
-        } satisfies Message;
-      });
 
-      setMessages((prev) => [...prev, ...assistantMsgs]);
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response.content,
+        timestamp: new Date(),
+        metadata: response.metadata ?? {},
+      };
+
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch (error) {
       console.error('Failed to get response:', error);
       
@@ -437,6 +449,31 @@ function App() {
                   value={selectedMadhabs}
                   onChange={setSelectedMadhabs}
                 />
+              {/* Modes */}
+              <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-800/70 border border-gray-700' : 'bg-white shadow-sm'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <label className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>AS Mode</label>
+                  <input
+                    type="checkbox"
+                    checked={asMode}
+                    onChange={(e) => setAsMode(e.target.checked)}
+                  />
+                </div>
+                <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Search each madhab separately and synthesize a comparative answer.
+                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <label className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Quran Healing</label>
+                  <input
+                    type="checkbox"
+                    checked={quranHealingMode}
+                    onChange={(e) => setQuranHealingMode(e.target.checked)}
+                  />
+                </div>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Provide comforting Quran/Hadith excerpts from cache, unmodified.
+                </p>
+              </div>
               </>
             )}
 

@@ -19,6 +19,7 @@ from ..models.schemas import (
     TranslationRequest,
 )
 from ..services import GeminiService, MultiLLMService
+from ..services.orchestrator_service import get_orchestrator_service
 
 # Optional DSPy import - only needed for /ask-dspy endpoint
 try:
@@ -50,8 +51,29 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         logger.info(f"AI request using provider={provider}, model={model or 'default'}")
 
         gemini = GeminiService()
+        orchestrator = get_orchestrator_service()
 
         is_fiqh, category = is_fiqh_question(request.question)
+        
+        # Use orchestrator to determine if multi-madhab is needed
+        should_multi_madhab, reason = await orchestrator.should_use_multi_madhab(request.question)
+        
+        # Determine target madhabs: only use multi-madhab if orchestrator says so AND user selected madhabs
+        target_madhabs = None
+        if should_multi_madhab and request.madhabs:
+            target_madhabs = request.madhabs
+        elif should_multi_madhab and not request.madhabs:
+            # Default to all four if fiqh question but no specific madhabs selected
+            target_madhabs = ["maliki", "hanafi", "shafii", "hanbali"]
+        elif not should_multi_madhab:
+            # Not a fiqh question or doesn't need multi-madhab - use single response
+            target_madhabs = None
+        
+        logger.info(
+            f"Question classification: is_fiqh={is_fiqh}, should_multi_madhab={should_multi_madhab}, "
+            f"reason={reason}, target_madhabs={target_madhabs}"
+        )
+        
         if request.stream:
             if provider != "gemini":
                 raise HTTPException(
@@ -63,7 +85,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                 stream_payload = await gemini.stream_fiqh_answer(
                     request.question,
                     language=request.language,
-                    madhabs=request.madhabs,
+                    madhabs=target_madhabs,
                 )
             except Exception as exc:  # pragma: no cover - runtime safeguard
                 logger.error(f"Streaming setup failed: {exc}")
@@ -77,11 +99,44 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                 },
             )
 
-        result = await gemini.answer_islamic_question(
-            request.question,
-            language=request.language,
-            madhabs=request.madhabs,
-        )
+        # Handle Quran Healing mode
+        if request.quran_healing_mode:
+            healing_content = await orchestrator.get_quran_healing_content(
+                user_state=request.question,
+                psychological_keywords=None,
+            )
+            # Use healing content for response
+            result = await gemini.answer_with_healing_content(
+                request.question,
+                language=request.language,
+                healing_content=healing_content,
+            )
+        elif request.as_mode and is_fiqh:
+            # AS Mode: Search each madhab separately before answering
+            madhab_results = await orchestrator.search_madhabs_separately(
+                request.question,
+                madhabs=target_madhabs,
+                n_results_per_madhab=5,
+            )
+            # Get Quran/Hadith from cache
+            cached_content = await orchestrator.get_quran_hadith_from_cache(
+                request.question,
+                limit=5,
+            )
+            result = await gemini.answer_with_orchestrated_context(
+                request.question,
+                language=request.language,
+                madhab_results=madhab_results,
+                cached_quran_hadith=cached_content,
+            )
+        else:
+            # Standard flow
+            result = await gemini.answer_islamic_question(
+                request.question,
+                language=request.language,
+                madhabs=target_madhabs,
+                use_cached_only=not request.quran_healing_mode,  # Use cache for standard mode
+            )
 
         answer_text = result.get("answer")
         rag_chunks = result.get("rag_chunks", [])

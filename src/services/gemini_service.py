@@ -204,6 +204,7 @@ Provide:
         question: str,
         language: str = "arabic",
         madhabs: list[str] | None = None,
+        use_cached_only: bool = True,
     ) -> dict[str, Any]:
         """
         Answer Islamic questions with scholarly references.
@@ -271,11 +272,11 @@ Provide:
             except Exception as e:
                 logger.warning(f"RAG search failed: {e}")
 
-        # Fetch Quranic verses from live API when question references specific ayah
-        quran_context = await self._fetch_quran_context(question)
+        # Fetch Quranic verses (cache-first, optionally cache-only)
+        quran_context = await self._fetch_quran_context(question, cache_only=use_cached_only)
 
-        # Fetch Hadith support for non-fiqh questions
-        hadith_context = await self._fetch_hadith_context(question, is_fiqh)
+        # Fetch Hadith support (cache-first, optionally cache-only)
+        hadith_context = await self._fetch_hadith_context(question, is_fiqh, cache_only=use_cached_only)
 
         structured_sources = [
             {"type": "quran", "content": quran_context},
@@ -666,7 +667,7 @@ Note: This is educational guidance, not a definitive ruling.
 
         return await self.generate_content(prompt, temperature=0.4, max_tokens=1000)
 
-    async def _fetch_quran_context(self, question: str) -> str:
+    async def _fetch_quran_context(self, question: str, cache_only: bool = False) -> str:
         """
         Fetch relevant Quranic verses for the user's question.
 
@@ -695,6 +696,9 @@ Note: This is educational guidance, not a definitive ruling.
         except Exception as exc:
             logger.warning(f"Cache search failed, falling back to API: {exc}")
 
+        if cache_only:
+            return ""
+
         # Fallback to API if cache miss
         try:
             from ..api_clients import QuranAPIClient
@@ -716,7 +720,7 @@ Note: This is educational guidance, not a definitive ruling.
 
         return ""
 
-    async def _fetch_hadith_context(self, question: str, is_fiqh: bool) -> str:
+    async def _fetch_hadith_context(self, question: str, is_fiqh: bool, cache_only: bool = False) -> str:
         """
         Fetch supporting hadith narrations.
 
@@ -755,6 +759,9 @@ Note: This is educational guidance, not a definitive ruling.
         except Exception as exc:
             logger.warning(f"Cache search failed, falling back to API: {exc}")
 
+        if cache_only:
+            return ""
+
         # Fallback to API if cache miss
         try:
             from ..api_clients import HadithAPIClient
@@ -775,3 +782,202 @@ Note: This is educational guidance, not a definitive ruling.
         except Exception as exc:
             logger.warning(f"Hadith API search failed: {exc}")
         return ""
+
+    async def answer_with_healing_content(
+        self,
+        question: str,
+        language: str = "arabic",
+        healing_content: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Answer question using Quran Healing mode with psychological support.
+
+        Args:
+            question: User's question
+            language: Response language
+            healing_content: Dictionary with quran and hadith results for healing
+
+        Returns:
+            Response with healing-focused answer
+        """
+        from ..utils.question_classifier import detect_arabic_dialect, is_arabic_text
+
+        dialect = detect_arabic_dialect(question) if is_arabic_text(question) else "msa"
+        if language == "arabic" or is_arabic_text(question):
+            lang_instruction = (
+                "in Arabic, matching the user's dialect and tone"
+                if dialect == "msa"
+                else f"in Arabic matching the user's {dialect} dialect"
+            )
+            language = "arabic"
+        else:
+            lang_instruction = "in clear, natural English"
+
+        # Format healing content
+        quran_texts = []
+        for q in (healing_content or {}).get("quran", [])[:5]:
+            verse_key = q.get("surah", {}).get("number", "") if isinstance(q.get("surah"), dict) else ""
+            verse_num = q.get("numberInSurah", "")
+            text = q.get("text", "")
+            if text:
+                quran_texts.append(f"[Quran {verse_key}:{verse_num}]\n{text}\n")
+
+        hadith_texts = []
+        for h in (healing_content or {}).get("hadith", [])[:5]:
+            collection = h.get("collection", "").title()
+            number = h.get("number", "")
+            arab = h.get("arab", "")
+            text = h.get("text", "")
+            if arab or text:
+                hadith_texts.append(f"[Hadith {collection} #{number}]\n{arab}\n{text}\n")
+
+        healing_sources = "\n".join(quran_texts + hadith_texts)
+
+        prompt = f"""
+You are a compassionate Islamic counselor providing spiritual and psychological healing through Quran and Hadith.
+
+**Healing Sources (DO NOT MODIFY - Return exactly as provided):**
+
+{healing_sources}
+
+**User's Question/State:**
+{question}
+
+Provide a compassionate, healing response {lang_instruction}:
+1. Acknowledge the user's feelings with empathy
+2. Present the healing verses/hadiths EXACTLY as provided above (do not paraphrase or modify)
+3. Provide gentle reflection and comfort
+4. Offer practical spiritual guidance
+
+Be warm, understanding, and supportive. Return Quran and Hadith texts exactly as shown above.
+"""
+
+        answer = await self.generate_content(prompt, temperature=0.7, max_tokens=2000)
+
+        return {
+            "answer": answer or "",
+            "sources": [
+                {"type": "quran", "content": "\n".join(quran_texts)},
+                {"type": "hadith", "content": "\n".join(hadith_texts)},
+            ],
+            "raw_context": {
+                "quran": "\n".join(quran_texts),
+                "hadith": "\n".join(hadith_texts),
+                "fiqh": "",
+            },
+            "rag_chunks": [],
+        }
+
+    async def answer_with_orchestrated_context(
+        self,
+        question: str,
+        language: str = "arabic",
+        madhab_results: dict[str, list[dict[str, Any]]] | None = None,
+        cached_quran_hadith: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Answer question using AS Mode with separate madhab searches and cached content.
+
+        Args:
+            question: User's question
+            language: Response language
+            madhab_results: Dictionary mapping madhab keys to their search results
+            cached_quran_hadith: Dictionary with quran and hadith from cache
+
+        Returns:
+            Response with orchestrated answer
+        """
+        from ..utils.question_classifier import detect_arabic_dialect, is_arabic_text, get_response_instructions
+
+        dialect = detect_arabic_dialect(question) if is_arabic_text(question) else "msa"
+        if language == "arabic" or is_arabic_text(question):
+            lang_instruction = (
+                "in Arabic, matching the user's dialect and tone"
+                if dialect == "msa"
+                else f"in Arabic matching the user's {dialect} dialect"
+            )
+            language = "arabic"
+        else:
+            lang_instruction = "in clear, natural English"
+
+        is_fiqh, category = is_fiqh_question(question)
+        scholar_role = get_response_instructions(is_fiqh, category, language)
+
+        # Format madhab results
+        madhab_contexts = []
+        for madhab, results in (madhab_results or {}).items():
+            if results:
+                madhab_text = f"\n=== {madhab.upper()} MADHAB RESULTS ===\n"
+                for result in results[:3]:  # Top 3 per madhab
+                    text = result.get("text", "")
+                    metadata = result.get("metadata", {})
+                    ref = metadata.get("references", "")
+                    if text:
+                        madhab_text += f"{text}\n"
+                        if ref:
+                            madhab_text += f"Reference: {ref}\n"
+                madhab_contexts.append(madhab_text)
+
+        # Format Quran/Hadith from cache (DO NOT MODIFY)
+        quran_texts = []
+        for q in (cached_quran_hadith or {}).get("quran", []):
+            verse_key = q.get("surah", {}).get("number", "") if isinstance(q.get("surah"), dict) else ""
+            verse_num = q.get("numberInSurah", "")
+            text = q.get("text", "")
+            if text:
+                quran_texts.append(f"[Quran {verse_key}:{verse_num}]\n{text}\n")
+
+        hadith_texts = []
+        for h in (cached_quran_hadith or {}).get("hadith", []):
+            collection = h.get("collection", "").title()
+            number = h.get("number", "")
+            arab = h.get("arab", "")
+            text = h.get("text", "")
+            if arab or text:
+                hadith_texts.append(f"[Hadith {collection} #{number}]\n{arab}\n{text}\n")
+
+        all_context = "\n".join(madhab_contexts + quran_texts + hadith_texts)
+
+        prompt = f"""
+{scholar_role}
+
+**Verified Sources from AS Mode Search (DO NOT MODIFY Quran/Hadith - Return exactly as shown):**
+
+{all_context}
+
+**Question:**
+{question}
+
+Provide answer {lang_instruction}:
+1. Search results from each madhab (present separately)
+2. Quran verses EXACTLY as shown above (do not modify or paraphrase)
+3. Hadiths EXACTLY as shown above (do not modify or paraphrase)
+4. Comprehensive analysis comparing madhab positions if multiple
+
+IMPORTANT:
+- Return Quran and Hadith texts EXACTLY as provided - do not modify or paraphrase
+- Present madhab results clearly by school
+- Hide citations unless user explicitly asks
+"""
+
+        answer = await self.generate_content(prompt, temperature=0.6, max_tokens=3000)
+
+        # Flatten madhab results for rag_chunks
+        rag_chunks = []
+        for madhab, results in (madhab_results or {}).items():
+            rag_chunks.extend(results)
+
+        return {
+            "answer": answer or "",
+            "sources": [
+                {"type": "quran", "content": "\n".join(quran_texts)},
+                {"type": "hadith", "content": "\n".join(hadith_texts)},
+                {"type": "fiqh", "content": "\n".join(madhab_contexts)},
+            ],
+            "raw_context": {
+                "quran": "\n".join(quran_texts),
+                "hadith": "\n".join(hadith_texts),
+                "fiqh": "\n".join(madhab_contexts),
+            },
+            "rag_chunks": rag_chunks,
+        }
