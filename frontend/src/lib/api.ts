@@ -17,6 +17,12 @@ export const aiApi = {
     webSearchEnabled?: boolean,
     webSearchAttempts?: number,
   ): Promise<AIResponse> => {
+    // Get provider and model from localStorage
+    // Default to Ollama (local, no API key required)
+    const provider = localStorage.getItem('llm_provider') || 'ollama';
+    const model = localStorage.getItem('llm_model') || undefined;
+    const apiKey = localStorage.getItem(`${provider}_api_key`) || undefined;
+
     const response = await fetch(`${API_BASE}/api/v1/ai/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -24,6 +30,9 @@ export const aiApi = {
         question,
         language,
         madhabs,
+        provider,
+        model,
+        api_key: apiKey,
         quran_healing_mode: Boolean(quranHealingMode),
         as_mode: Boolean(asMode),
         web_search_enabled: Boolean(webSearchEnabled),

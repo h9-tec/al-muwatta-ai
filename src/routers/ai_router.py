@@ -47,7 +47,8 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         AI-generated answer with sources
     """
     try:
-        provider = request.provider or "gemini"
+        # Default to Ollama (local, no API key required) if no provider specified
+        provider = request.provider or "ollama"
         model = request.model
         logger.info(f"AI request using provider={provider}, model={model or 'default'}")
 
@@ -77,7 +78,7 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         )
         
         # Build cache key (question + prefs)
-        cache_key = await cache._generate_cache_key(
+        cache_key = cache._generate_cache_key(
             "ai:answer",
             request.question,
             language=request.language,
@@ -119,6 +120,132 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
                     "X-RAG-Chunks": json.dumps(stream_payload["rag_chunks"])[:4000],
                 },
             )
+
+        # If user selected a non-Gemini provider, answer with that provider directly
+        if provider != "gemini":
+            # Build retrieval context without using Gemini generation
+            try:
+                from ..services.fiqh_rag_service import get_fiqh_rag
+                from ..services.cached_content_service import get_cached_content_service
+                from ..utils.question_classifier import get_response_instructions
+
+                rag = get_fiqh_rag()
+                cached_service = get_cached_content_service()
+
+                # RAG for fiqh
+                rag_chunks = []
+                rag_context = ""
+                if is_fiqh:
+                    rag_chunks = rag.search(
+                        request.question,
+                        n_results=5,
+                        madhabs=target_madhabs,
+                        score_threshold=0.25,
+                    )
+                    rag_context = rag.get_relevant_context(
+                        request.question, max_context_length=1500, madhabs=target_madhabs
+                    )
+
+                # Quran/Hadith (cache-only)
+                quran_results = await cached_service.search_quran_in_cache(
+                    request.question, edition="quran-uthmani", limit=3
+                )
+                hadith_results = await cached_service.search_hadith_in_cache(
+                    request.question, collections=["bukhari", "muslim", "malik"], limit=3
+                )
+
+                def _format_quran(qrs: list[dict]) -> str:
+                    out = []
+                    for v in qrs or []:
+                        name = v.get("surah_name", "")
+                        ay = v.get("ayah_number", "")
+                        text = v.get("text", "")
+                        if text:
+                            out.append(f"[Quran {name} {ay}]\n{text}")
+                    return "\n\n".join(out)
+
+                def _format_hadith(hds: list[dict]) -> str:
+                    out = []
+                    for h in hds or []:
+                        coll = (h.get("collection") or "").title()
+                        num = h.get("number", "")
+                        arab = h.get("arab", "")
+                        txt = h.get("text", "")
+                        if arab or txt:
+                            out.append(f"[Hadith {coll} #{num}]\n{arab}\n{txt}")
+                    return "\n\n".join(out)
+
+                quran_context = _format_quran(quran_results)
+                hadith_context = _format_hadith(hadith_results)
+
+                # Optional web context (per user setting)
+                web_context = ""
+                if request.web_search_enabled:
+                    attempts = min(3, max(1, request.web_search_attempts or 2))
+                    if target_madhabs:
+                        web_context = await orchestrator.perform_web_search_by_madhab(
+                            request.question, target_madhabs, attempts=attempts
+                        )
+                    else:
+                        web_context = await orchestrator.perform_web_search(
+                            request.question, attempts=attempts
+                        )
+
+                # Build prompt for selected provider
+                scholar_role = get_response_instructions(is_fiqh, category, request.language)
+                sources_text = "\n\n".join(
+                    [s for s in [quran_context, hadith_context, rag_context, web_context] if s]
+                )
+                school_instruction = (
+                    f"Present rulings per selected madhabs: {', '.join(target_madhabs)}"
+                    if (is_fiqh and target_madhabs)
+                    else "Provide direct answer"
+                )
+
+                prompt = (
+                    f"{scholar_role}\n\n"
+                    f"Use the verified context below. Do NOT alter Quran/Hadith texts.\n\n"
+                    f"{sources_text}\n\n"
+                    f"Question: {request.question}\n\n"
+                    f"Answer in {request.language} with: 1) {school_instruction}, 2) Evidence from Quran/Hadith when relevant, 3) Clear, respectful explanation."
+                )
+
+                service = MultiLLMService(provider=provider, api_key=request.api_key)
+                generated = await service.generate(
+                    prompt=prompt,
+                    model=model or "",
+                    temperature=0.6,
+                    max_tokens=1500,
+                )
+
+                if not generated:
+                    raise HTTPException(status_code=503, detail="No response from selected model")
+
+                structured_sources = [
+                    {"type": "quran", "content": quran_context},
+                    {"type": "hadith", "content": hadith_context},
+                    {"type": "fiqh", "content": rag_context},
+                    {"type": "web", "content": web_context},
+                ]
+
+                return AIResponse(
+                    content=generated,
+                    language=request.language,
+                    model=model or provider,
+                    metadata={
+                        "question": request.question,
+                        "provider": provider,
+                        "model": model,
+                        "include_sources": request.include_sources,
+                        "sources": structured_sources,
+                        "rag_chunks": rag_chunks if is_fiqh else [],
+                    },
+                )
+            except HTTPException:
+                raise
+            except Exception as exc:
+                logger.error(f"Non-Gemini flow failed: {exc}")
+                raise HTTPException(status_code=500, detail=str(exc))
 
         # Handle Quran Healing mode
         if request.quran_healing_mode:
@@ -178,9 +305,16 @@ async def ask_islamic_question(request: IslamicQuestionRequest) -> AIResponse:
         answer_text = result.get("answer")
         rag_chunks = result.get("rag_chunks", [])
         if not answer_text or (is_fiqh and not rag_chunks):
-            raise HTTPException(
-                status_code=503, detail="Could not generate answer from Maliki sources"
-            )
+            # Graceful fallback for non-fiqh queries (e.g., greetings) when LLM unavailable
+            if not is_fiqh and not answer_text:
+                answer_text = (
+                    "Wa alaykum assalam. How can I help you today with Islamic questions "
+                    "based on the Quran and authentic Hadith?"
+                )
+            else:
+                raise HTTPException(
+                    status_code=503, detail="Could not generate answer from Maliki sources"
+                )
 
         structured_sources = [
             source for source in result.get("sources", []) if source.get("content")

@@ -27,7 +27,7 @@ export function SettingsModal() {
     gemini: { name: 'Google Gemini', requires_api_key: true },
   });
   
-  const [selectedProvider, setSelectedProvider] = useState('gemini');
+  const [selectedProvider, setSelectedProvider] = useState('ollama');
   const [apiKey, setApiKey] = useState('');
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('');

@@ -36,10 +36,10 @@ class Settings(BaseSettings):
         description="Use local LLM (Ollama) instead of Gemini",
     )
 
-    # Google Gemini Configuration
-    gemini_api_key: str = Field(
-        default="",
-        description="Google Gemini API key - SET IN .env FILE",
+    # Google Gemini Configuration (Optional - only needed if using Gemini provider)
+    gemini_api_key: str | None = Field(
+        default=None,
+        description="Google Gemini API key (optional - only required when using Gemini provider)",
     )
     gemini_model: str = Field(
         default="gemini-2.0-flash-exp",

@@ -38,9 +38,14 @@ class GeminiService:
         the generative model with optional RAG enhancement.
         """
         try:
-            genai.configure(api_key=settings.gemini_api_key)
-            self.model = genai.GenerativeModel(settings.gemini_model)
-            logger.info(f"Gemini service initialized with model: {settings.gemini_model}")
+            # Only configure Gemini if API key is provided
+            if settings.gemini_api_key:
+                genai.configure(api_key=settings.gemini_api_key)
+                self.model = genai.GenerativeModel(settings.gemini_model)
+                logger.info(f"Gemini service initialized with model: {settings.gemini_model}")
+            else:
+                self.model = None
+                logger.warning("Gemini API key not configured - Gemini provider will not be available")
 
             # Initialize RAG if enabled
             self.rag = None
@@ -92,6 +97,11 @@ class GeminiService:
             Generated content as string or None if generation fails
         """
         try:
+            # Check if Gemini model is configured
+            if not self.model:
+                logger.error("Gemini model not configured - API key missing")
+                return None
+
             generation_config = genai.types.GenerationConfig(
                 temperature=temperature,
                 max_output_tokens=max_tokens,
